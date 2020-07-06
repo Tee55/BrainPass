@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css')}}">
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+
+</head>
+
+<style>
+    .data {
+        font-family: 'Roboto', sans-serif;
+        color: #636363;
+        font-size: 15px;
+    }
+
+    #field {
+        padding: 20px;
+    }
+
+    h4 {
+        font-family: 'Roboto', sans-serif;
+        color: #636363;
+        font-size: 20px;
+    }
+</style>
+
+<body>
+    <hgroup>
+        <h1>Brainwave authentication <br>using visual stimulus</h1>
+        <h3>By Mahidol wittayanusorn school</h3>
+    </hgroup>
+    <form>
+        <center>
+            <h4>Information</h4>
+        </center>
+        <div id="field">
+            <div class="data">Username: {% with username = get_flashed_messages(category_filter=["username"]) %} {% if username %} {% for message in username %} {{ message }} {% endfor %} {% endif %} {% endwith %}</div>
+            <br>
+            <div class="data">Stimulus: {% with stimulus = get_flashed_messages(category_filter=["stimulus"]) %} {% if stimulus %} {% for message in stimulus %} {{ message }} {% endfor %} {% endif %} {% endwith %}</div>
+            <br>
+            <div class="data">Login time: {% with time = get_flashed_messages(category_filter=["time"]) %} {% if time %} {% for message in time %} {{ message }} {% endfor %} {% endif %} {% endwith %}</div>
+            <br>
+            <div class="data">Compliment time: {% with time_com = get_flashed_messages(category_filter=["time_com"]) %} {% if time_com %} {% for message in time_com %} {{ message }} {% endfor %} {% endif %} {% endwith %}</div>
+            <br>
+        </div>
+        <a href="/">
+            <button type="button" class="button buttonBlue">Go to first page</button>
+            </a>
+        <a href="/improve-model/">
+            <button type="button" class="button buttonBlue">Improve model</button>
+            </a>
+    </form>
+</body>
+
+
+
+</html>

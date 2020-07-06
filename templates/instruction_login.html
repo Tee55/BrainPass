@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css')}}">
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function(){
+            setTimeout(function(){
+                window.location = window.location.href.replace(window.location.href, '/login-stimulus/')
+            }, 5000);
+        });
+    </script>
+
+</head>
+
+<style>
+    form {
+        width: 600px;
+    }
+</style>
+
+<body>
+    <hgroup>
+        <h1>Brainwave authentication <br>using visual stimulus</h1>
+        <h3>By Mahidol wittayanusorn school</h3>
+    </hgroup>
+    <form action = "." method = "POST">
+        <center>
+            <p>1. Count Snordgrass and Vandewart pictures...
+            </p>
+            <img src="" height="100" id="img">
+            <p>2. Look at the yellow dots....
+            </p>
+            <img src="{{ url_for('static', filename = 'Checker_board.gif') }}" height="100" id="img">
+        </center>
+    </form>
+</body>
+
+<script>
+
+    var images = []
+    images[0] = "{{ url_for('static', filename = 'images/image1.png') }}";
+    images[1] = "{{ url_for('static', filename = 'images/image2.png') }}";
+    images[2] = "{{ url_for('static', filename = 'images/image3.png') }}";
+    images[3] = "{{ url_for('static', filename = 'images/image4.png') }}";
+    images[4] = "{{ url_for('static', filename = 'images/image5.png') }}";
+    images[5] = "{{ url_for('static', filename = 'images/image6.png') }}";
+    images[6] = "{{ url_for('static', filename = 'images/image7.png') }}";
+    images[7] = "{{ url_for('static', filename = 'images/image8.png') }}";
+    images[8] = "{{ url_for('static', filename = 'images/image9.png') }}";
+    images[9] = "{{ url_for('static', filename = 'images/image10.png') }}";
+    images[10] = "{{ url_for('static', filename = 'images/image11.png') }}";
+    images[11] = "{{ url_for('static', filename = 'images/image12.png') }}";
+    images[12] = "{{ url_for('static', filename = 'images/image13.png') }}";
+    images[13] = "{{ url_for('static', filename = 'images/image14.png') }}";
+    images[14] = "{{ url_for('static', filename = 'images/image15.png') }}";
+    images[15] = "{{ url_for('static', filename = 'images/image16.png') }}";
+    images[16] = "{{ url_for('static', filename = 'images/image17.png') }}";
+    images[17] = "{{ url_for('static', filename = 'images/image18.png') }}";
+    images[18] = "{{ url_for('static', filename = 'images/image19.png') }}";
+    images[19] = "{{ url_for('static', filename = 'images/image20.png') }}";
+    images[20] = "{{ url_for('static', filename = 'images/image21.png') }}";
+    images[21] = "{{ url_for('static', filename = 'images/image22.png') }}";
+    images[22] = "{{ url_for('static', filename = 'images/image23.png') }}";
+    images[23] = "{{ url_for('static', filename = 'images/image24.png') }}";
+    images[24] = "{{ url_for('static', filename = 'images/image25.png') }}";
+    images[25] = "{{ url_for('static', filename = 'images/image26.png') }}";
+    images[26] = "{{ url_for('static', filename = 'images/image27.png') }}";
+    images[27] = "{{ url_for('static', filename = 'images/image28.png') }}";
+    images[28] = "{{ url_for('static', filename = 'images/image29.png') }}";
+    images[29] = "{{ url_for('static', filename = 'images/image30.png') }}";
+    images[30] = "{{ url_for('static', filename = 'images/image31.png') }}";
+    images[31] = "{{ url_for('static', filename = 'images/image32.png') }}";
+    images[32] = "{{ url_for('static', filename = 'images/image33.png') }}";
+    images[33] = "{{ url_for('static', filename = 'images/image34.png') }}";
+    images[34] = "{{ url_for('static', filename = 'images/image35.png') }}";
+    images[35] = "{{ url_for('static', filename = 'images/image36.png') }}";
+    images[36] = "{{ url_for('static', filename = 'images/image37.png') }}";
+    images[37] = "{{ url_for('static', filename = 'images/image38.png') }}";
+    images[38] = "{{ url_for('static', filename = 'images/image39.png') }}";
+    images[39] = "{{ url_for('static', filename = 'images/image40.png') }}";
+    images[40] = "{{ url_for('static', filename = 'images/image41.png') }}";
+    images[41] = "{{ url_for('static', filename = 'images/image42.png') }}";
+    images[42] = "{{ url_for('static', filename = 'images/image43.png') }}";
+    images[43] = "{{ url_for('static', filename = 'images/image44.png') }}";
+    images[44] = "{{ url_for('static', filename = 'images/image45.png') }}";
+    images[45] = "{{ url_for('static', filename = 'images/image46.png') }}";
+    images[46] = "{{ url_for('static', filename = 'images/image47.png') }}";
+    images[47] = "{{ url_for('static', filename = 'images/image48.png') }}";
+    images[48] = "{{ url_for('static', filename = 'images/image49.png') }}";
+    images[49] = "{{ url_for('static', filename = 'images/image50.png') }}";
+    images[50] = "{{ url_for('static', filename = 'images/image51.png') }}";
+    images[51] = "{{ url_for('static', filename = 'images/image52.png') }}";
+    images[52] = "{{ url_for('static', filename = 'images/image53.png') }}";
+    images[53] = "{{ url_for('static', filename = 'images/image54.png') }}";
+    images[54] = "{{ url_for('static', filename = 'images/image55.png') }}";
+    images[55] = "{{ url_for('static', filename = 'images/image56.png') }}";
+    images[56] = "{{ url_for('static', filename = 'images/image57.png') }}";
+    images[57] = "{{ url_for('static', filename = 'images/image58.png') }}";
+    images[58] = "{{ url_for('static', filename = 'images/image59.png') }}";
+    images[59] = "{{ url_for('static', filename = 'images/image60.png') }}";
+    images[60] = "{{ url_for('static', filename = 'images/image61.png') }}";
+    images[61] = "{{ url_for('static', filename = 'images/image62.png') }}";
+    images[62] = "{{ url_for('static', filename = 'images/image63.png') }}";
+    images[63] = "{{ url_for('static', filename = 'images/image64.png') }}";
+    images[64] = "{{ url_for('static', filename = 'images/image65.png') }}";
+    images[65] = "{{ url_for('static', filename = 'images/image66.png') }}";
+    images[66] = "{{ url_for('static', filename = 'images/image67.png') }}";
+    images[67] = "{{ url_for('static', filename = 'images/image68.png') }}";
+    images[68] = "{{ url_for('static', filename = 'images/image69.png') }}";
+    images[69] = "{{ url_for('static', filename = 'images/image70.png') }}";
+    images[70] = "{{ url_for('static', filename = 'images/image71.png') }}";
+    images[71] = "{{ url_for('static', filename = 'images/image72.png') }}";
+    images[72] = "{{ url_for('static', filename = 'images/image73.png') }}";
+    images[73] = "{{ url_for('static', filename = 'images/image74.png') }}";
+    images[74] = "{{ url_for('static', filename = 'images/image75.png') }}";
+    images[75] = "{{ url_for('static', filename = 'images/image76.png') }}";
+    images[76] = "{{ url_for('static', filename = 'images/image77.png') }}";
+    images[77] = "{{ url_for('static', filename = 'images/image78.png') }}";
+    images[78] = "{{ url_for('static', filename = 'images/image79.png') }}";
+    images[79] = "{{ url_for('static', filename = 'images/image80.png') }}";
+    images[80] = "{{ url_for('static', filename = 'images/image81.png') }}";
+    images[81] = "{{ url_for('static', filename = 'images/image82.png') }}";
+    images[82] = "{{ url_for('static', filename = 'images/image83.png') }}";
+    images[83] = "{{ url_for('static', filename = 'images/image84.png') }}";
+    images[84] = "{{ url_for('static', filename = 'images/image85.png') }}";
+    images[85] = "{{ url_for('static', filename = 'images/image86.png') }}";
+    images[86] = "{{ url_for('static', filename = 'images/image87.png') }}";
+    images[87] = "{{ url_for('static', filename = 'images/image88.png') }}";
+    images[88] = "{{ url_for('static', filename = 'images/image89.png') }}";
+    images[89] = "{{ url_for('static', filename = 'images/image90.png') }}";
+    images[90] = "{{ url_for('static', filename = 'images/image91.png') }}";
+    images[91] = "{{ url_for('static', filename = 'images/image92.png') }}";
+    images[92] = "{{ url_for('static', filename = 'images/image93.png') }}";
+    images[93] = "{{ url_for('static', filename = 'images/image94.png') }}";
+    images[94] = "{{ url_for('static', filename = 'images/image95.png') }}";
+    images[95] = "{{ url_for('static', filename = 'images/image96.png') }}";
+    images[96] = "{{ url_for('static', filename = 'images/image97.png') }}";
+    images[97] = "{{ url_for('static', filename = 'images/image98.png') }}";
+    images[98] = "{{ url_for('static', filename = 'images/image99.png') }}";
+    images[99] = "{{ url_for('static', filename = 'images/image100.png') }}";
+    images[100] = "{{ url_for('static', filename = 'images/image101.png') }}";
+    images[101] = "{{ url_for('static', filename = 'images/image102.png') }}";
+    images[102] = "{{ url_for('static', filename = 'images/image103.png') }}";
+    images[103] = "{{ url_for('static', filename = 'images/image104.png') }}";
+    images[104] = "{{ url_for('static', filename = 'images/image105.png') }}";
+    images[105] = "{{ url_for('static', filename = 'images/image106.png') }}";
+    images[106] = "{{ url_for('static', filename = 'images/image107.png') }}";
+    images[107] = "{{ url_for('static', filename = 'images/image108.png') }}";
+    images[108] = "{{ url_for('static', filename = 'images/image109.png') }}";
+    images[109] = "{{ url_for('static', filename = 'images/image110.png') }}";
+    images[110] = "{{ url_for('static', filename = 'images/image111.png') }}";
+    images[111] = "{{ url_for('static', filename = 'images/image112.png') }}";
+    images[112] = "{{ url_for('static', filename = 'images/image113.png') }}";
+    images[113] = "{{ url_for('static', filename = 'images/image114.png') }}";
+    images[114] = "{{ url_for('static', filename = 'images/image115.png') }}";
+    images[115] = "{{ url_for('static', filename = 'images/image116.png') }}";
+    images[116] = "{{ url_for('static', filename = 'images/image117.png') }}";
+    images[117] = "{{ url_for('static', filename = 'images/image118.png') }}";
+    images[118] = "{{ url_for('static', filename = 'images/image119.png') }}";
+    images[119] = "{{ url_for('static', filename = 'images/image120.png') }}";
+    images[120] = "{{ url_for('static', filename = 'images/image121.png') }}";
+    images[121] = "{{ url_for('static', filename = 'images/image122.png') }}";
+    images[122] = "{{ url_for('static', filename = 'images/image123.png') }}";
+    images[123] = "{{ url_for('static', filename = 'images/image124.png') }}";
+    images[124] = "{{ url_for('static', filename = 'images/image125.png') }}";
+    images[125] = "{{ url_for('static', filename = 'images/image126.png') }}";
+    images[126] = "{{ url_for('static', filename = 'images/image127.png') }}";
+    images[127] = "{{ url_for('static', filename = 'images/image128.png') }}";
+    images[128] = "{{ url_for('static', filename = 'images/image129.png') }}";
+    images[129] = "{{ url_for('static', filename = 'images/image130.png') }}";
+    images[130] = "{{ url_for('static', filename = 'images/image131.png') }}";
+    images[131] = "{{ url_for('static', filename = 'images/image132.png') }}";
+    images[132] = "{{ url_for('static', filename = 'images/image133.png') }}";
+    images[133] = "{{ url_for('static', filename = 'images/image134.png') }}";
+    images[134] = "{{ url_for('static', filename = 'images/image135.png') }}";
+    images[135] = "{{ url_for('static', filename = 'images/image136.png') }}";
+    images[136] = "{{ url_for('static', filename = 'images/image137.png') }}";
+    images[137] = "{{ url_for('static', filename = 'images/image138.png') }}";
+    images[138] = "{{ url_for('static', filename = 'images/image139.png') }}";
+    images[139] = "{{ url_for('static', filename = 'images/image140.png') }}";
+    images[140] = "{{ url_for('static', filename = 'images/image141.png') }}";
+    images[141] = "{{ url_for('static', filename = 'images/image142.png') }}";
+    images[142] = "{{ url_for('static', filename = 'images/image143.png') }}";
+    images[143] = "{{ url_for('static', filename = 'images/image144.png') }}";
+    images[144] = "{{ url_for('static', filename = 'images/image145.png') }}";
+    images[145] = "{{ url_for('static', filename = 'images/image146.png') }}";
+    images[146] = "{{ url_for('static', filename = 'images/image147.png') }}";
+    images[147] = "{{ url_for('static', filename = 'images/image148.png') }}";
+    images[148] = "{{ url_for('static', filename = 'images/image149.png') }}";
+    images[149] = "{{ url_for('static', filename = 'images/image150.png') }}";
+    images[150] = "{{ url_for('static', filename = 'images/image151.png') }}";
+    images[151] = "{{ url_for('static', filename = 'images/image152.png') }}";
+    images[152] = "{{ url_for('static', filename = 'images/image153.png') }}";
+    images[153] = "{{ url_for('static', filename = 'images/image154.png') }}";
+    images[154] = "{{ url_for('static', filename = 'images/image155.png') }}";
+    images[155] = "{{ url_for('static', filename = 'images/image156.png') }}";
+    images[156] = "{{ url_for('static', filename = 'images/image157.png') }}";
+    images[157] = "{{ url_for('static', filename = 'images/image158.png') }}";
+    images[158] = "{{ url_for('static', filename = 'images/image159.png') }}";
+    images[159] = "{{ url_for('static', filename = 'images/image160.png') }}";
+    images[160] = "{{ url_for('static', filename = 'images/image161.png') }}";
+    images[161] = "{{ url_for('static', filename = 'images/image162.png') }}";
+    images[162] = "{{ url_for('static', filename = 'images/image163.png') }}";
+    images[163] = "{{ url_for('static', filename = 'images/image164.png') }}";
+    images[164] = "{{ url_for('static', filename = 'images/image165.png') }}";
+    images[165] = "{{ url_for('static', filename = 'images/image166.png') }}";
+    images[166] = "{{ url_for('static', filename = 'images/image167.png') }}";
+    images[167] = "{{ url_for('static', filename = 'images/image168.png') }}";
+    images[168] = "{{ url_for('static', filename = 'images/image169.png') }}";
+    images[169] = "{{ url_for('static', filename = 'images/image170.png') }}";
+    images[170] = "{{ url_for('static', filename = 'images/image171.png') }}";
+    images[171] = "{{ url_for('static', filename = 'images/image172.png') }}";
+    images[172] = "{{ url_for('static', filename = 'images/image173.png') }}";
+    images[173] = "{{ url_for('static', filename = 'images/image174.png') }}";
+    images[174] = "{{ url_for('static', filename = 'images/image175.png') }}";
+    images[175] = "{{ url_for('static', filename = 'images/image176.png') }}";
+    images[176] = "{{ url_for('static', filename = 'images/image177.png') }}";
+    images[177] = "{{ url_for('static', filename = 'images/image178.png') }}";
+    images[178] = "{{ url_for('static', filename = 'images/image179.png') }}";
+    images[179] = "{{ url_for('static', filename = 'images/image180.png') }}";
+    images[180] = "{{ url_for('static', filename = 'images/image181.png') }}";
+    images[181] = "{{ url_for('static', filename = 'images/image182.png') }}";
+    images[182] = "{{ url_for('static', filename = 'images/image183.png') }}";
+    images[183] = "{{ url_for('static', filename = 'images/image184.png') }}";
+    images[184] = "{{ url_for('static', filename = 'images/image185.png') }}";
+    images[185] = "{{ url_for('static', filename = 'images/image186.png') }}";
+    images[186] = "{{ url_for('static', filename = 'images/image187.png') }}";
+    images[187] = "{{ url_for('static', filename = 'images/image188.png') }}";
+    images[188] = "{{ url_for('static', filename = 'images/image189.png') }}";
+    images[189] = "{{ url_for('static', filename = 'images/image190.png') }}";
+    images[190] = "{{ url_for('static', filename = 'images/image191.png') }}";
+    images[191] = "{{ url_for('static', filename = 'images/image192.png') }}";
+    images[192] = "{{ url_for('static', filename = 'images/image193.png') }}";
+    images[193] = "{{ url_for('static', filename = 'images/image194.png') }}";
+    images[194] = "{{ url_for('static', filename = 'images/image195.png') }}";
+    images[195] = "{{ url_for('static', filename = 'images/image196.png') }}";
+    images[196] = "{{ url_for('static', filename = 'images/image197.png') }}";
+    images[197] = "{{ url_for('static', filename = 'images/image198.png') }}";
+    images[198] = "{{ url_for('static', filename = 'images/image199.png') }}";
+    images[199] = "{{ url_for('static', filename = 'images/image200.png') }}";
+    images[200] = "{{ url_for('static', filename = 'images/image201.png') }}";
+    images[201] = "{{ url_for('static', filename = 'images/image202.png') }}";
+    images[202] = "{{ url_for('static', filename = 'images/image203.png') }}";
+    images[203] = "{{ url_for('static', filename = 'images/image204.png') }}";
+    images[204] = "{{ url_for('static', filename = 'images/image205.png') }}";
+    images[205] = "{{ url_for('static', filename = 'images/image206.png') }}";
+    images[206] = "{{ url_for('static', filename = 'images/image207.png') }}";
+    images[207] = "{{ url_for('static', filename = 'images/image208.png') }}";
+    images[208] = "{{ url_for('static', filename = 'images/image209.png') }}";
+    images[209] = "{{ url_for('static', filename = 'images/image210.png') }}";
+    images[210] = "{{ url_for('static', filename = 'images/image211.png') }}";
+    images[211] = "{{ url_for('static', filename = 'images/image212.png') }}";
+    images[212] = "{{ url_for('static', filename = 'images/image213.png') }}";
+    images[213] = "{{ url_for('static', filename = 'images/image214.png') }}";
+    images[214] = "{{ url_for('static', filename = 'images/image215.png') }}";
+    images[215] = "{{ url_for('static', filename = 'images/image216.png') }}";
+    images[216] = "{{ url_for('static', filename = 'images/image217.png') }}";
+    images[217] = "{{ url_for('static', filename = 'images/image218.png') }}";
+    images[218] = "{{ url_for('static', filename = 'images/image219.png') }}";
+    images[219] = "{{ url_for('static', filename = 'images/image220.png') }}";
+    images[220] = "{{ url_for('static', filename = 'images/image221.png') }}";
+    images[221] = "{{ url_for('static', filename = 'images/image222.png') }}";
+    images[222] = "{{ url_for('static', filename = 'images/image223.png') }}";
+    images[223] = "{{ url_for('static', filename = 'images/image224.png') }}";
+    images[224] = "{{ url_for('static', filename = 'images/image225.png') }}";
+    images[225] = "{{ url_for('static', filename = 'images/image226.png') }}";
+    images[226] = "{{ url_for('static', filename = 'images/image227.png') }}";
+    images[227] = "{{ url_for('static', filename = 'images/image228.png') }}";
+    images[228] = "{{ url_for('static', filename = 'images/image229.png') }}";
+    images[229] = "{{ url_for('static', filename = 'images/image230.png') }}";
+    images[230] = "{{ url_for('static', filename = 'images/image231.png') }}";
+    images[231] = "{{ url_for('static', filename = 'images/image232.png') }}";
+    images[232] = "{{ url_for('static', filename = 'images/image233.png') }}";
+    images[233] = "{{ url_for('static', filename = 'images/image234.png') }}";
+    images[234] = "{{ url_for('static', filename = 'images/image235.png') }}";
+    images[235] = "{{ url_for('static', filename = 'images/image236.png') }}";
+    images[236] = "{{ url_for('static', filename = 'images/image237.png') }}";
+    images[237] = "{{ url_for('static', filename = 'images/image238.png') }}";
+    images[238] = "{{ url_for('static', filename = 'images/image239.png') }}";
+    images[239] = "{{ url_for('static', filename = 'images/image240.png') }}";
+    images[240] = "{{ url_for('static', filename = 'images/image241.png') }}";
+    images[241] = "{{ url_for('static', filename = 'images/image242.png') }}";
+    images[242] = "{{ url_for('static', filename = 'images/image243.png') }}";
+    images[243] = "{{ url_for('static', filename = 'images/image244.png') }}";
+    images[244] = "{{ url_for('static', filename = 'images/image245.png') }}";
+    images[245] = "{{ url_for('static', filename = 'images/image246.png') }}";
+    images[246] = "{{ url_for('static', filename = 'images/image247.png') }}";
+    images[247] = "{{ url_for('static', filename = 'images/image248.png') }}";
+    images[248] = "{{ url_for('static', filename = 'images/image249.png') }}";
+    images[249] = "{{ url_for('static', filename = 'images/image250.png') }}";
+    images[250] = "{{ url_for('static', filename = 'images/image251.png') }}";
+    images[251] = "{{ url_for('static', filename = 'images/image252.png') }}";
+    images[252] = "{{ url_for('static', filename = 'images/image253.png') }}";
+    images[253] = "{{ url_for('static', filename = 'images/image254.png') }}";
+    images[254] = "{{ url_for('static', filename = 'images/image255.png') }}";
+    images[255] = "{{ url_for('static', filename = 'images/image256.png') }}";
+    images[256] = "{{ url_for('static', filename = 'images/image257.png') }}";
+    images[257] = "{{ url_for('static', filename = 'images/image258.png') }}";
+    images[258] = "{{ url_for('static', filename = 'images/image259.png') }}";
+    images[259] = "{{ url_for('static', filename = 'images/image260.png') }}";
+
+    function getNumber(){
+        var img = document.getElementById("img");
+        var x = Math.floor((Math.random() * 259) + 0);
+        img.src = images[x]
+        return x
+    }
+    getNumber();
+</script>
+
+</html>

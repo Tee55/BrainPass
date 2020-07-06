@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css')}}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+
+</head>
+
+<style>
+    input {
+        font-size: 18px;
+        padding: 10px 10px 10px 5px;
+        -webkit-appearance: none;
+        display: block;
+        background: #fafafa;
+        color: #636363;
+        width: 100%;
+        border: none;
+        border-radius: 0;
+        border-bottom: 1px solid #757575;
+    }
+
+    input:focus {
+        outline: none;
+    }
+
+    #name_get {
+        margin-top: 60px;
+        padding-bottom: 50px;
+    }
+
+    form {
+        width: 500px;
+    }
+
+    #warning {
+        color: red;
+    }
+</style>
+
+<body>
+    <hgroup>
+        <h1>Brainwave authentication <br>using visual stimulus</h1>
+        <h3>By Mahidol wittayanusorn school</h3>
+    </hgroup>
+    <form action="." method="POST">
+        <center>
+            <div id="name_get">
+                <h4 style="display: inline;font-family: 'Roboto', sans-serif;color: #636363;">Username:</h4>
+                <div class="mdl-textfield mdl-js-textfield">
+                    <input type="text" name="text">
+                </div>
+                <div id="warning">
+                    {% with messages = get_flashed_messages() %} {% if messages %} {% for message in messages %} {{ message }} {% endfor %} {% endif %} {% endwith %}
+                </div>
+            </div>
+            <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect" type="submit" name="submit" value="Submit">Submit</button>
+            &nbsp;<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect" type="submit" name="submit" value="Go back">Go back</button>
+        </center>
+    </form>
+</body>
+
+<script>
+    $('#back').click(function() {
+        window.location = window.location.href.replace('/name-signup/', '/')
+    });
+</script>
+
+</html>
