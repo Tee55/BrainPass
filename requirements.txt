@@ -1,1 +1,6 @@
 pandas
+keras
+numpy
+flask
+pyserial
+tensorflow
