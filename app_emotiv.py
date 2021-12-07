@@ -13,7 +13,6 @@ import sys
 import glob
 import numpy as np
 import pymysql
-import open_bci_v3 as bci
 import emotiv_epoc as emotiv
 from multiprocessing import Pool
 
