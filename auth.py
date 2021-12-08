@@ -52,55 +52,53 @@ class EEGutil:
         n = time_length * self.sampling_rate  # group size
         m = time_shift * self.sampling_rate  # overlap size
         return [x[i:i+n] for i in range(0, len(x), n-m)]
+    
+    def compute_features(self, x):
+        epoches = self.segmentation(x, 3, 1)
+        features = np.empty((len(epoches), 6))
+        for i, epoch in enumerate(epoches):
+            delta = self.bandpower(epoch, 1, 4)
+            theta = self.bandpower(epoch, 4, 8)
+            alpha = self.bandpower(epoch, 8, 13)
+            beta = self.bandpower(epoch, 13, 30)
+            gamma = self.bandpower(epoch, 30, 45)
+            total_power = self.bandpower(epoch, 1, 45)
 
+            features[i][0] = delta
+            features[i][1] = theta
+            features[i][2] = alpha
+            features[i][3] = beta
+            features[i][4] = gamma
+            features[i][5] = total_power
+                
+        return features
     def main(self):
         df = pd.read_csv(os.path.join("dataset", "eeg-data.csv"), sep=",")
         df.raw_values = df.raw_values.map(json.loads)
         print(df.columns)
-        train_X = df[df.label == 'colorRound1-1']
+        df = df[df.label == 'colorRound1-1']
         
         self.duration = self.stimulus_duration('colorRound1-1')
         self.time_shift = 1
         print('Duration: %d' % self.duration)
         
-        X_train = np.empty((self.num_people, 2, 5))
-        y_train = np.empty((self.num_people, self.num_people))
+        X_train = []
+        y_train = []
         y_hats = np.arange(self.num_people)
         y_hats = np.unique(y_hats)
-        for subject in range(1, self.num_people):
-            data = train_X[train_X['id'] == subject].raw_values.tolist()
-            trainX = []
+        for subject in range(0, self.num_people):
+            data = df[df['id'] == subject+1].raw_values.tolist()
+            raw_data = []
             for series in data:
-                trainX.extend(series)
-                
-            print(len(trainX))
+                raw_data.extend(series)
             
-            if len(trainX) >= self.sampling_rate*self.duration:
-                epoches = self.segmentation(trainX, self.duration, self.time_shift)
-            
-                # number of samples
-                print(len(epoches))
-                
-                bp_array = np.empty((len(epoches), 5))
-                for i in range(len(epoches)):
-                    x = epoches[i]
-                    delta = self.bandpower(x, 1, 4)
-                    theta = self.bandpower(x, 4, 8)
-                    alpha = self.bandpower(x, 8, 13)
-                    beta = self.bandpower(x, 13, 30)
-                    gamma = self.bandpower(x, 30, 45)
-                    
-                    bp_array[i][0] = delta
-                    bp_array[i][1] = theta
-                    bp_array[i][2] = alpha
-                    bp_array[i][3] = beta
-                    bp_array[i][4] = gamma
-                    
-                bp_array = bp_array[0:2]
-                    
-                X_train[subject-1] = bp_array
-                y_train[subject-1] = y_hats[subject-1]
-                
+            if len(raw_data) >= self.sampling_rate*self.duration:
+                raw_data = raw_data[0:self.sampling_rate*self.duration]
+                features = self.compute_features(raw_data)
+                X_train.append(features)
+                y_train.append(y_hats[subject])
+        X_train = np.array(X_train)
+        y_train = np.array(y_train)
         print(X_train.shape)
         print(y_train.shape)
         model = self.create_model(n_timesteps=X_train.shape[1], n_features=X_train.shape[2])
