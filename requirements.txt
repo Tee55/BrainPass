@@ -5,3 +5,5 @@ flask
 pyserial
 tensorflow
 scipy
+scikit-learn
+progress

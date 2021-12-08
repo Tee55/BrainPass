@@ -6,10 +6,15 @@ from scipy.fft import fft
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 import json
-from keras.preprocessing.sequence import TimeseriesGenerator
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.feature_selection import chi2, SelectKBest
+from progress.bar import Bar
+from sklearn.model_selection import LeaveOneOut
+import matplotlib.pyplot as plt
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from itertools import combinations
+from sklearn.neighbors import KNeighborsClassifier
 
 class EEGutil:
     
@@ -98,6 +103,30 @@ class EEGutil:
         features[5] = total_power
                 
         return features
+    
+    def fisher(self, x, y):
+        
+        features_all = []
+        for raw_data in x:
+            features = self.compute_features(raw_data)
+            features_all.append(features)
+        
+        features_all = np.array(features_all)
+        
+        # Fisher score
+        fisher_score,_ = chi2(features_all, y)    
+        idx = np.argsort(fisher_score)
+        idx = idx[::-1]
+        return idx
+
+    def cal_acc(self, predictions, y_val):
+        score = 0
+        for pred, y in zip(predictions, y_val):
+            if pred == y:
+                score += 1
+        acc = score/len(predictions)
+        return acc
+        
     def main(self):
         df = pd.read_csv(os.path.join("dataset", "eeg-data.csv"), sep=",")
         df.raw_values = df.raw_values.map(json.loads)
@@ -108,13 +137,9 @@ class EEGutil:
         self.time_shift = 1
         print('Duration: %d' % self.duration)
         
-        features_all = []
-        y_train = []
-        integer_encoded = np.arange(0, self.num_people)
-        # binary encode
-        integer_encoded = np.reshape(integer_encoded, (-1, 1))
-        onehot_encoder = OneHotEncoder(sparse=False)
-        y_hats = onehot_encoder.fit_transform(integer_encoded)
+        x = []
+        y = []
+        y_hats = np.arange(0, self.num_people)
         for subject in range(0, self.num_people):
             data = df[df['id'] == subject+1].raw_values.tolist()
             raw_data = []
@@ -123,20 +148,44 @@ class EEGutil:
             
             if len(raw_data) >= self.sampling_rate*self.duration:
                 raw_data = raw_data[0:self.sampling_rate*self.duration]
-                features = self.compute_features(raw_data)
-                features_all.append(features)
-                y_train.append(y_hats[subject])
+                x.append(raw_data)
+                y.append(y_hats[subject])
                 
-        features_all = np.array(features_all)
-        scaler = MinMaxScaler(feature_range=(0, 1))
-        features_all = scaler.fit_transform(features_all)
-        y_train = np.array(y_train)
-        print(features_all.shape)
-        print(y_train.shape)
+        x = np.array(x)   
+        y = np.array(y)
         
-        # Fisher score
-        fisher_score = chi2(features_all, y_train)    
-        print('Score: ', fisher_score)
+        scaler = MinMaxScaler(feature_range=(0, 1))
+        x = scaler.fit_transform(x)
+        
+        idx = self.fisher(x, y)
+        print("Fisher Features Index (High -> Low): {}".format(idx))
+        for combi_number in range(1, len(idx)+1):
+            combi_idx = combinations(idx, combi_number)
+            combi_idx = list(combi_idx)
+            
+            for combi in combi_idx:
+                features_all = []
+                for raw_data in x:
+                    features = self.compute_features(raw_data)
+                    features = [features[index] for index in combi]
+                    features_all.append(features)
+                        
+                data_x = np.array(features_all)
+                data_y = y
+                
+                # Leave one out
+                loo = LeaveOneOut()
+                count = 0
+                for train_indices, test_indices in loo.split(data_x):
+                    train_X, val_X = data_x[train_indices], data_x[test_indices]
+                    train_y, val_y = data_y[train_indices], data_y[test_indices]
+                    
+                    classifier = KNeighborsClassifier(n_neighbors=5)
+                    classifier.fit(train_X, train_y)
+                    preds = classifier.predict(val_X)
+                    if preds[0] == val_y[0]:
+                        count += 1
+                print("Accuracy: {}".format(count))
     
 if __name__ == '__main__':
     eegutil = EEGutil()
