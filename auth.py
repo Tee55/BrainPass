@@ -7,6 +7,9 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 import json
 from keras.preprocessing.sequence import TimeseriesGenerator
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.feature_selection import SelectKBest, chi2
 
 class EEGutil:
     
@@ -55,7 +58,16 @@ class EEGutil:
     
     def compute_features(self, x):
         epoches = self.segmentation(x, 3, 1)
-        features = np.empty((len(epoches), 6))
+        
+        # Six features
+        features = np.empty((6, ))
+        
+        delta_avg = []
+        theta_avg = []
+        alpha_avg = []
+        beta_avg = []
+        gamma_avg = []
+        total_power_avg = []
         for i, epoch in enumerate(epoches):
             delta = self.bandpower(epoch, 1, 4)
             theta = self.bandpower(epoch, 4, 8)
@@ -63,13 +75,27 @@ class EEGutil:
             beta = self.bandpower(epoch, 13, 30)
             gamma = self.bandpower(epoch, 30, 45)
             total_power = self.bandpower(epoch, 1, 45)
+            
+            delta_avg.append(delta)
+            theta_avg.append(theta)
+            alpha_avg.append(alpha)
+            beta_avg.append(beta)
+            gamma_avg.append(gamma)
+            total_power_avg.append(total_power)
+            
+        delta_avg = np.mean(np.array(delta_avg))
+        theta_avg = np.mean(np.array(theta_avg))
+        alpha_avg = np.mean(np.array(alpha_avg))
+        beta_avg = np.mean(np.array(beta_avg))
+        gamma_avg = np.mean(np.array(gamma_avg))
+        total_power_avg = np.mean(np.array(total_power_avg))
 
-            features[i][0] = delta
-            features[i][1] = theta
-            features[i][2] = alpha
-            features[i][3] = beta
-            features[i][4] = gamma
-            features[i][5] = total_power
+        features[0] = delta
+        features[1] = theta
+        features[2] = alpha
+        features[3] = beta
+        features[4] = gamma
+        features[5] = total_power
                 
         return features
     def main(self):
@@ -82,10 +108,13 @@ class EEGutil:
         self.time_shift = 1
         print('Duration: %d' % self.duration)
         
-        X_train = []
+        features_all = []
         y_train = []
-        y_hats = np.arange(self.num_people)
-        y_hats = np.unique(y_hats)
+        integer_encoded = np.arange(0, self.num_people)
+        # binary encode
+        integer_encoded = np.reshape(integer_encoded, (-1, 1))
+        onehot_encoder = OneHotEncoder(sparse=False)
+        y_hats = onehot_encoder.fit_transform(integer_encoded)
         for subject in range(0, self.num_people):
             data = df[df['id'] == subject+1].raw_values.tolist()
             raw_data = []
@@ -95,15 +124,19 @@ class EEGutil:
             if len(raw_data) >= self.sampling_rate*self.duration:
                 raw_data = raw_data[0:self.sampling_rate*self.duration]
                 features = self.compute_features(raw_data)
-                X_train.append(features)
+                features_all.append(features)
                 y_train.append(y_hats[subject])
-        X_train = np.array(X_train)
+                
+        features_all = np.array(features_all)
+        scaler = MinMaxScaler(feature_range=(0, 1))
+        features_all = scaler.fit_transform(features_all)
         y_train = np.array(y_train)
-        print(X_train.shape)
+        print(features_all.shape)
         print(y_train.shape)
-        model = self.create_model(n_timesteps=X_train.shape[1], n_features=X_train.shape[2])
-        model.fit(X_train, y_train, epochs=10, batch_size=self.batch_size, verbose=1)
-    
+        
+        # Fisher score
+        fisher_score = chi2(features_all, y_train)    
+        print('Score: ', fisher_score)
     
 if __name__ == '__main__':
     eegutil = EEGutil()
