@@ -182,7 +182,7 @@ class EEGutil:
                     preds = classifier.predict(val_X)
                     if preds[0] == val_y[0]:
                         count += 1
-                print("Accuracy: {}".format(count))
+                print("Combination: {}, Accuracy: {}".format(combi_number, count))
     
 if __name__ == '__main__':
     eegutil = EEGutil()
