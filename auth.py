@@ -61,11 +61,11 @@ class EEGutil:
         m = time_shift * self.sampling_rate  # overlap size
         return [x[i:i+n] for i in range(0, len(x), n-m)]
     
-    def compute_features(self, x):
+    def compute_features(self, x, num_features=5):
         epoches = self.segmentation(x, 3, 1)
         
         # Six features
-        features = np.empty((6, ))
+        features = np.empty((num_features, ))
         
         delta_avg = []
         theta_avg = []
@@ -95,12 +95,11 @@ class EEGutil:
         gamma_avg = np.mean(np.array(gamma_avg))
         total_power_avg = np.mean(np.array(total_power_avg))
 
-        features[0] = delta
-        features[1] = theta
-        features[2] = alpha
-        features[3] = beta
-        features[4] = gamma
-        features[5] = total_power
+        features[0] = delta/total_power
+        features[1] = theta/total_power
+        features[2] = alpha/total_power
+        features[3] = beta/total_power
+        features[4] = gamma/total_power
                 
         return features
     
