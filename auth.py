@@ -15,14 +15,16 @@ import matplotlib.pyplot as plt
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from itertools import combinations
 from sklearn.neighbors import KNeighborsClassifier
+import mne
+from mne.preprocessing import ICA
 
 class EEGutil:
     
     def __init__(self):
-        self.sampling_rate = 512
-        self.num_people = 31
         self.batch_size = 1
-        self.num_channels = 3
+        self.DATASET_DIR = "dataset/"
+        self.minmaxscaler = MinMaxScaler()
+        self.duration = 3
         
         
     def create_model(self, n_timesteps, n_features):
@@ -62,10 +64,7 @@ class EEGutil:
         return [x[i:i+n] for i in range(0, len(x), n-m)]
     
     def compute_features(self, x, num_features=5):
-        epoches = self.segmentation(x, 3, 1)
-        
-        # Six features
-        features = np.empty((num_features, ))
+        epoches = self.segmentation(x, self.duration, self.time_shift)
         
         delta_avg = []
         theta_avg = []
@@ -73,7 +72,7 @@ class EEGutil:
         beta_avg = []
         gamma_avg = []
         total_power_avg = []
-        for i, epoch in enumerate(epoches):
+        for epoch in epoches:
             delta = self.bandpower(epoch, 1, 4)
             theta = self.bandpower(epoch, 4, 8)
             alpha = self.bandpower(epoch, 8, 13)
@@ -95,25 +94,27 @@ class EEGutil:
         gamma_avg = np.mean(np.array(gamma_avg))
         total_power_avg = np.mean(np.array(total_power_avg))
 
-        features[0] = delta/total_power
-        features[1] = theta/total_power
-        features[2] = alpha/total_power
-        features[3] = beta/total_power
-        features[4] = gamma/total_power
+        features = np.empty((num_features, ))
+        features[0] = delta_avg/total_power_avg
+        features[1] = theta_avg/total_power_avg
+        features[2] = alpha_avg/total_power_avg
+        features[3] = beta_avg/total_power_avg
+        features[4] = gamma_avg/total_power_avg
                 
         return features
     
     def fisher(self, x, y):
         
         features_all = []
-        for raw_data in x:
+        for i, raw_data in enumerate(x):
             features = self.compute_features(raw_data)
             features_all.append(features)
-        
+            
         features_all = np.array(features_all)
+        print(features_all.shape)
         
         # Fisher score
-        fisher_score,_ = chi2(features_all, y)    
+        fisher_score,_ = chi2(features_all, y)
         idx = np.argsort(fisher_score)
         idx = idx[::-1]
         return idx
@@ -125,14 +126,42 @@ class EEGutil:
                 score += 1
         acc = score/len(predictions)
         return acc
+    
+    def load_dataset(self):
+        
+        x = []
+        y = np.arange(len(os.listdir(self.DATASET_DIR)))
+        
+        for id_dir in os.listdir(self.DATASET_DIR):
+            id_x = []
+            for data_file in os.listdir(os.path.join(self.DATASET_DIR, id_dir)):
+                general_info_df = pd.read_csv(os.path.join(self.DATASET_DIR, id_dir, data_file), delimiter=",", header=None, nrows=1, skipinitialspace=True)
+                general_info = {}
+                for col in general_info_df.columns:
+                    text = general_info_df.iloc[0][col]
+                    key, value = text.split(':', 1)
+                    value = value.strip()
+                    general_info[key] = value
+
+                headers = general_info["labels"]
+                self.sampling_rate = int(general_info["sampling"])
+                header_list = headers.split(" ")
+                
+                df = pd.read_csv(os.path.join(self.DATASET_DIR, id_dir, data_file), delimiter=",", names=header_list, skiprows=1, skipinitialspace=True)
+                df = df.drop(df.index[0:self.sampling_rate * self.duration])
+                id_x.append(df["O1"])      
+            x.append(id_x)
+            
+        x = np.array(x)
+        
+        print(x.shape, y.shape)
+                
+        return x, y
         
     def main(self):
-        df = pd.read_csv(os.path.join("dataset", "eeg-data.csv"), sep=",")
-        df.raw_values = df.raw_values.map(json.loads)
-        print(df.columns)
-        df = df[df.label == 'colorRound1-1']
-        
-        self.duration = self.stimulus_duration('colorRound1-1')
+        x, y = self.load_dataset()
+            
+        self.duration = self.stimulus_duration(stimulus)
         self.time_shift = 1
         print('Duration: %d' % self.duration)
         
@@ -149,9 +178,14 @@ class EEGutil:
                 raw_data = raw_data[0:self.sampling_rate*self.duration]
                 x.append(raw_data)
                 y.append(y_hats[subject])
+            else:
+                continue
                 
-        x = np.array(x)   
+        x = np.array(x)
         y = np.array(y)
+        
+        scaler = MinMaxScaler()
+        x = scaler.fit_transform(x)
         
         idx = self.fisher(x, y)
         print("Fisher Features Index (High -> Low): {}".format(idx))
