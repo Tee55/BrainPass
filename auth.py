@@ -154,9 +154,6 @@ class EEGutil:
         x = np.array(x)   
         y = np.array(y)
         
-        scaler = MinMaxScaler(feature_range=(0, 1))
-        x = scaler.fit_transform(x)
-        
         idx = self.fisher(x, y)
         print("Fisher Features Index (High -> Low): {}".format(idx))
         for combi_number in range(1, len(idx)+1):
