@@ -1,36 +1,34 @@
 import pandas as pd
 import os
 import numpy as np
-from datetime import datetime
 from scipy.fft import fft
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
-import json
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.feature_selection import chi2, SelectKBest
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, OneHotEncoder, LabelEncoder
+from sklearn.feature_selection import chi2
 from progress.bar import Bar
 from sklearn.model_selection import LeaveOneOut
-import matplotlib.pyplot as plt
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from itertools import combinations
 from sklearn.neighbors import KNeighborsClassifier
-import mne
-from mne.preprocessing import ICA
+from scipy.signal import butter, lfilter
 
 class EEGutil:
     
     def __init__(self):
         self.batch_size = 1
         self.DATASET_DIR = "dataset/"
-        self.minmaxscaler = MinMaxScaler()
+        self.label_encoder = LabelEncoder()
+        self.onehot_encoder = OneHotEncoder()
         self.duration = 3
+        self.time_shift = 1
+        self.n_epochs = 10
+        self.sampling_rate = 128
         
         
     def create_model(self, n_timesteps, n_features):
         model = Sequential()
         model.add(LSTM(100, input_shape=(n_timesteps, n_features)))
-        model.add(Dense(self.num_people, activation='softmax'))
+        model.add(Dense(self.n_epochs, activation='softmax'))
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         return model
 
@@ -100,7 +98,6 @@ class EEGutil:
             features_all.append(features)
             
         features_all = np.array(features_all)
-        print(features_all.shape)
         
         # Fisher score
         fisher_score,_ = chi2(features_all, y)
@@ -119,11 +116,12 @@ class EEGutil:
     def load_dataset(self):
         
         x = []
-        y = np.arange(len(os.listdir(self.DATASET_DIR)))
+        y = []
         
         for id_dir in os.listdir(self.DATASET_DIR):
-            id_x = []
-            for data_file in os.listdir(os.path.join(self.DATASET_DIR, id_dir)):
+            id_x = np.empty((self.n_epochs, self.sampling_rate * self.duration))
+            for i in range(0, self.n_epochs):
+                data_file = os.listdir(os.path.join(self.DATASET_DIR, id_dir))[i]
                 general_info_df = pd.read_csv(os.path.join(self.DATASET_DIR, id_dir, data_file), delimiter=",", header=None, nrows=1, skipinitialspace=True)
                 general_info = {}
                 for col in general_info_df.columns:
@@ -133,25 +131,61 @@ class EEGutil:
                     general_info[key] = value
 
                 headers = general_info["labels"]
-                self.sampling_rate = int(general_info["sampling"])
                 header_list = headers.split(" ")
                 
                 df = pd.read_csv(os.path.join(self.DATASET_DIR, id_dir, data_file), delimiter=",", names=header_list, skiprows=1, skipinitialspace=True)
-                df = df.drop(df.index[0:self.sampling_rate * self.duration])
-                id_x.append(df["O1"])      
+                df = df.drop(df.index[self.sampling_rate * self.duration:])
+                id_x[i] = df["O1"]
             x.append(id_x)
+            y.append(id_dir)
             
         x = np.array(x)
+        y = self.label_encoder.fit_transform(y)
         
         print(x.shape, y.shape)
                 
         return x, y
+    
+    def preprocessing(self, x):  
+        minmax_scaler = MinMaxScaler()
+        standard_scaler = StandardScaler()
+        for i, epoches in enumerate(x):
+            epoches = minmax_scaler.fit_transform(epoches)
+            epoches = standard_scaler.fit_transform(epoches)
+            x[i] = epoches
+        return x
+    
+    def filter(self, x, idx):
+        
+        if idx[0] == 0:
+            low_fs = 1
+            high_fs = 4
+        elif idx[0] == 1:
+            low_fs = 4
+            high_fs = 8
+        elif idx[0] == 2:
+            low_fs = 8
+            high_fs = 13
+        elif idx[0] == 3:
+            low_fs = 13
+            high_fs = 30
+        elif idx[0] == 4:
+            low_fs = 30
+            high_fs = 45
+        
+        for i, epoches in enumerate(x):
+            b, a = butter(5, [low_fs, high_fs], btype='band', fs=self.sampling_rate)
+            epoches = lfilter(b, a, epoches)
+            x[i] = epoches
+        return x
         
     def main(self):
         x, y = self.load_dataset()
-        
+        x = self.preprocessing(x)
         idx = self.fisher(x, y)
         print("Fisher Features Index (High -> Low): {}".format(idx))
+        
+        x = self.filter(x, idx)
         for combi_number in range(1, len(idx)+1):
             combi_idx = combinations(idx, combi_number)
             combi_idx = list(combi_idx)
