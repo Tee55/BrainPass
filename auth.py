@@ -37,17 +37,6 @@ class EEGutil:
     def checkDir(self):
         if not os.path.exists("dataset/"):
             os.mkdir("dataset/")
-            
-    def stimulus_duration(self, stimulus_name):
-        df = pd.read_csv(os.path.join("dataset", "stimulus-times.csv"), sep=",")
-        stimulus_list = list(df["event name"])
-        print(stimulus_list)
-        start_time = df.iloc[stimulus_list.index(stimulus_name)]["time"]
-        end_time = df.iloc[stimulus_list.index(stimulus_name) + 1]["time"]
-        FMT = '%Y-%m-%d %H:%M:%S.%f+00'
-        interval = datetime.strptime(end_time, FMT) - datetime.strptime(start_time, FMT)
-        interval = int(interval.total_seconds())
-        return interval
 
     def bandpower(self, x, fmin, fmax):
         Pxx = fft(x)
@@ -160,32 +149,6 @@ class EEGutil:
         
     def main(self):
         x, y = self.load_dataset()
-            
-        self.duration = self.stimulus_duration(stimulus)
-        self.time_shift = 1
-        print('Duration: %d' % self.duration)
-        
-        x = []
-        y = []
-        y_hats = np.arange(0, self.num_people)
-        for subject in range(0, self.num_people):
-            data = df[df['id'] == subject+1].raw_values.tolist()
-            raw_data = []
-            for series in data:
-                raw_data.extend(series)
-            
-            if len(raw_data) >= self.sampling_rate*self.duration:
-                raw_data = raw_data[0:self.sampling_rate*self.duration]
-                x.append(raw_data)
-                y.append(y_hats[subject])
-            else:
-                continue
-                
-        x = np.array(x)
-        y = np.array(y)
-        
-        scaler = MinMaxScaler()
-        x = scaler.fit_transform(x)
         
         idx = self.fisher(x, y)
         print("Fisher Features Index (High -> Low): {}".format(idx))
