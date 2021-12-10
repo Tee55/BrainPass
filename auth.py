@@ -11,6 +11,7 @@ from sklearn.model_selection import LeaveOneOut
 from itertools import combinations
 from sklearn.neighbors import KNeighborsClassifier
 from scipy.signal import butter, lfilter
+import matplotlib.pyplot as plt
 
 class EEGutil:
     
@@ -155,7 +156,7 @@ class EEGutil:
             x[i] = epoches
         return x
     
-    def filter(self, x, idx):
+    def filter(self, x, idx, isVisualize=False):
         
         if idx[0] == 0:
             low_fs = 1
@@ -176,6 +177,12 @@ class EEGutil:
         for i, epoches in enumerate(x):
             b, a = butter(5, [low_fs, high_fs], btype='band', fs=self.sampling_rate)
             epoches = lfilter(b, a, epoches)
+            
+            if isVisualize:
+                for epoch in epoches:
+                    plt.plot(epoch)
+                plt.show()
+            
             x[i] = epoches
         return x
         
