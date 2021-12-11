@@ -2,8 +2,6 @@ import pandas as pd
 import os
 import numpy as np
 from scipy.fft import fft
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.feature_selection import chi2
 from sklearn.neighbors import KNeighborsClassifier
@@ -12,8 +10,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn import preprocessing 
-from mlxtend.plotting import plot_decision_regions
-from sklearn.decomposition import PCA
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 class EEGutil:
     
@@ -45,7 +42,7 @@ class EEGutil:
         m = time_shift * self.sampling_rate  # overlap size
         return [x[i:i+n] for i in range(0, len(x), n-m)]
     
-    def compute_features(self, x, num_features=5):
+    def extract_features(self, x):
         epoches = self.segmentation(x, self.duration, self.time_shift)
         
         delta_avg = []
@@ -60,45 +57,22 @@ class EEGutil:
             alpha = self.bandpower(epoch, 8, 13)
             beta = self.bandpower(epoch, 13, 30)
             gamma = self.bandpower(epoch, 30, 45)
-            total_power = self.bandpower(epoch, 1, 45)
             
             delta_avg.append(delta)
             theta_avg.append(theta)
             alpha_avg.append(alpha)
             beta_avg.append(beta)
             gamma_avg.append(gamma)
-            total_power_avg.append(total_power)
             
         delta_avg = np.mean(np.array(delta_avg))
         theta_avg = np.mean(np.array(theta_avg))
         alpha_avg = np.mean(np.array(alpha_avg))
         beta_avg = np.mean(np.array(beta_avg))
         gamma_avg = np.mean(np.array(gamma_avg))
-        total_power_avg = np.mean(np.array(total_power_avg))
-
-        features = np.empty((num_features, ))
-        features[0] = delta_avg/total_power_avg
-        features[1] = theta_avg/total_power_avg
-        features[2] = alpha_avg/total_power_avg
-        features[3] = beta_avg/total_power_avg
-        features[4] = gamma_avg/total_power_avg
+        
+        features = [delta_avg, theta_avg, alpha_avg, beta_avg, gamma_avg]
                 
         return features
-    
-    def fisher(self, x, y):
-        
-        features_all = []
-        for i, raw_data in enumerate(x):
-            features = self.compute_features(raw_data)
-            features_all.append(features)
-            
-        features_all = np.array(features_all)
-        
-        # Fisher score
-        fisher_score,_ = chi2(features_all, y)
-        idx = np.argsort(fisher_score)
-        idx = idx[::-1]
-        return idx
 
     def cal_acc(self, predictions, y_val):
         score = 0
@@ -137,18 +111,21 @@ class EEGutil:
                 
         return x, y
     
-    def preprocessing(self, x):  
+    def preprocessing(self, x):
         
-        # Standardize
-        x = preprocessing.scale(x)
-        
-        # Buttorworth filter
-        b, a = butter(6, [1, 12], btype='bandpass', fs=self.sampling_rate)
-        x = lfilter(b, a, x)
-        
-        pca = PCA(n_components = 2)
-        x = pca.fit_transform(x)
+        new_x = []
+        for series in x:
+            features = self.extract_features(series)
+            new_x.append(features)
             
+        x = np.array(new_x)
+        
+        # Normalization
+        x = preprocessing.normalize(x)
+        
+        df = pd.DataFrame(x)
+        print(df)
+             
         return x
         
     def main(self):
@@ -157,24 +134,21 @@ class EEGutil:
         
         print(x.shape, y.shape)
         
-        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.33, random_state=42)
-    
-        for i in [5, 20, 30, 40, 80]:
-            classifier = KNeighborsClassifier(n_neighbors=i)
-            
-            classifier.fit(X_train, y_train)
-            
-            # Plotting decision region
-            plot_decision_regions(X_train, y_train, clf=classifier, legend=2)
-            
-            predictions = classifier.predict(X_test)
-            acc = accuracy_score(y_test, predictions)
-            print("Accuracy: {}".format(acc))
-            
-            plt.xlabel("X")
-            plt.ylabel("Y")
-            plt.title("Knn with K=" + str(i))
-            plt.show()
+        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.33)
+        
+        knn = KNeighborsClassifier(n_neighbors=5)
+        knn.fit(X_train, y_train)
+        
+        lda = LinearDiscriminantAnalysis()
+        lda.fit(X_train, y_train)
+        
+        predictions = knn.predict(X_test)
+        acc = accuracy_score(y_test, predictions)
+        print("KNN Accuracy: {}".format(acc))
+        
+        predictions = lda.predict(X_test)
+        acc = accuracy_score(y_test, predictions)
+        print("LDA Accuracy: {}".format(acc))
     
 if __name__ == '__main__':
     eegutil = EEGutil()
