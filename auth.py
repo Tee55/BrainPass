@@ -4,14 +4,16 @@ import numpy as np
 from scipy.fft import fft
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
-from sklearn.preprocessing import MinMaxScaler, StandardScaler, OneHotEncoder, LabelEncoder
+from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.feature_selection import chi2
-from progress.bar import Bar
-from sklearn.model_selection import LeaveOneOut
-from itertools import combinations
 from sklearn.neighbors import KNeighborsClassifier
 from scipy.signal import butter, lfilter
 import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from sklearn import preprocessing 
+from mlxtend.plotting import plot_decision_regions
+from sklearn.decomposition import PCA
 
 class EEGutil:
     
@@ -22,16 +24,8 @@ class EEGutil:
         self.onehot_encoder = OneHotEncoder()
         self.duration = 3
         self.time_shift = 1
-        self.n_epochs = 10
+        self.n_samples = 10
         self.sampling_rate = 128
-        
-        
-    def create_model(self, n_timesteps, n_features):
-        model = Sequential()
-        model.add(LSTM(100, input_shape=(n_timesteps, n_features)))
-        model.add(Dense(self.n_epochs, activation='softmax'))
-        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-        return model
 
     def checkDir(self):
         if not os.path.exists("dataset/"):
@@ -120,8 +114,7 @@ class EEGutil:
         y = []
         
         for id_dir in os.listdir(self.DATASET_DIR):
-            id_x = np.empty((self.n_epochs, self.sampling_rate * self.duration))
-            for i in range(0, self.n_epochs):
+            for i in range(0, self.n_samples):
                 data_file = os.listdir(os.path.join(self.DATASET_DIR, id_dir))[i]
                 general_info_df = pd.read_csv(os.path.join(self.DATASET_DIR, id_dir, data_file), delimiter=",", header=None, nrows=1, skipinitialspace=True)
                 general_info = {}
@@ -136,90 +129,52 @@ class EEGutil:
                 
                 df = pd.read_csv(os.path.join(self.DATASET_DIR, id_dir, data_file), delimiter=",", names=header_list, skiprows=1, skipinitialspace=True)
                 df = df.drop(df.index[self.sampling_rate * self.duration:])
-                id_x[i] = df["O1"]
-            x.append(id_x)
-            y.append(id_dir)
+                x.append(df["O1"])
+                y.append(id_dir)
             
         x = np.array(x)
         y = self.label_encoder.fit_transform(y)
-        
-        print(x.shape, y.shape)
                 
         return x, y
     
     def preprocessing(self, x):  
-        minmax_scaler = MinMaxScaler()
-        standard_scaler = StandardScaler()
-        for i, epoches in enumerate(x):
-            epoches = minmax_scaler.fit_transform(epoches)
-            epoches = standard_scaler.fit_transform(epoches)
-            x[i] = epoches
-        return x
-    
-    def filter(self, x, idx, isVisualize=False):
         
-        if idx[0] == 0:
-            low_fs = 1
-            high_fs = 4
-        elif idx[0] == 1:
-            low_fs = 4
-            high_fs = 8
-        elif idx[0] == 2:
-            low_fs = 8
-            high_fs = 13
-        elif idx[0] == 3:
-            low_fs = 13
-            high_fs = 30
-        elif idx[0] == 4:
-            low_fs = 30
-            high_fs = 45
+        # Standardize
+        x = preprocessing.scale(x)
         
-        for i, epoches in enumerate(x):
-            b, a = butter(5, [low_fs, high_fs], btype='band', fs=self.sampling_rate)
-            epoches = lfilter(b, a, epoches)
+        # Buttorworth filter
+        b, a = butter(6, [1, 12], btype='bandpass', fs=self.sampling_rate)
+        x = lfilter(b, a, x)
+        
+        pca = PCA(n_components = 2)
+        x = pca.fit_transform(x)
             
-            if isVisualize:
-                for epoch in epoches:
-                    plt.plot(epoch)
-                plt.show()
-            
-            x[i] = epoches
         return x
         
     def main(self):
         x, y = self.load_dataset()
         x = self.preprocessing(x)
-        idx = self.fisher(x, y)
-        print("Fisher Features Index (High -> Low): {}".format(idx))
         
-        x = self.filter(x, idx)
-        for combi_number in range(1, len(idx)+1):
-            combi_idx = combinations(idx, combi_number)
-            combi_idx = list(combi_idx)
+        print(x.shape, y.shape)
+        
+        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.33, random_state=42)
+    
+        for i in [5, 20, 30, 40, 80]:
+            classifier = KNeighborsClassifier(n_neighbors=i)
             
-            for combi in combi_idx:
-                features_all = []
-                for raw_data in x:
-                    features = self.compute_features(raw_data)
-                    features = [features[index] for index in combi]
-                    features_all.append(features)
-                        
-                data_x = np.array(features_all)
-                data_y = y
-                
-                # Leave one out
-                loo = LeaveOneOut()
-                count = 0
-                for train_indices, test_indices in loo.split(data_x):
-                    train_X, val_X = data_x[train_indices], data_x[test_indices]
-                    train_y, val_y = data_y[train_indices], data_y[test_indices]
-                    
-                    classifier = KNeighborsClassifier(n_neighbors=5)
-                    classifier.fit(train_X, train_y)
-                    preds = classifier.predict(val_X)
-                    if preds[0] == val_y[0]:
-                        count += 1
-                print("Combination: {}, Accuracy: {}".format(combi_number, count))
+            classifier.fit(X_train, y_train)
+            
+            # Plotting decision region
+            plot_decision_regions(X_train, y_train, clf=classifier, legend=2)
+            
+            predictions = classifier.predict(X_test)
+            acc = accuracy_score(y_test, predictions)
+            print("Accuracy: {}".format(acc))
+            
+            plt.xlabel("X")
+            plt.ylabel("Y")
+            plt.title("Knn with K=" + str(i))
+            plt.show()
     
 if __name__ == '__main__':
     eegutil = EEGutil()
