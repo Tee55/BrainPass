@@ -37,7 +37,17 @@ def user_loader(user_id):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    db.create_all()
+    if request.method == "POST":
+        username = request.form['username']
+        if User.query.filter_by(username=username).first() is None:
+            user = User(username=username)
+            db.session.add(user)
+        user = User.query.filter_by(username=username).first()
+        login_user(user, remember=False)
+        return redirect(url_for("login"))
+    else:
+        return render_template('index.html')
 
 @app.route('/instructions')
 def instruction():
