@@ -41,36 +41,32 @@
     </div>
 </div>
 
-<section class="container text-center">
-    <div class="row">
-        <div class="col">
-            <div class="card">
-                <h3 class="card-title">
-                    Brainwave authentication using visual stimulus
-                </h3>
-                <h5 class="card-title">
-                    By Mahidol Wittayanusorn School
-                </h5>
-                <div class="card-body">
-                    <form id="myForm" action="/" method="post" enctype="multipart/form-data">
-                        <i class="fas fa-brain"></i>
-                        <h1>Please sign in</h1>
-                        <div class="input-group mb-3">
-                            <span class="input-group-text">
-                                <i class="far fa-user-circle"></i>
-                            </span>
-                            <input type="text" class="form-control" name="username" placeholder="@UserName" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary" href="/login">Log In</button>
-                        <button type="submit" class="btn btn-primary" href="/signup">Sign Up</button>
-                    </form>
+<section class="container p-2">
+    <div class="card text-center">
+        <h3 class="card-title">
+            Brainwave authentication using visual stimulus
+        </h3>
+        <h5 class="card-title">
+            By Mahidol Wittayanusorn School
+        </h5>
+        <div class="card-body">
+            <form id="myForm" action="/" method="post" enctype="multipart/form-data">
+                <i class="fas fa-brain"></i>
+                <h5>Please sign in</h5>
+                <div class="input-group mb-3">
+                    <span class="input-group-text">
+                        <i class="far fa-user-circle"></i>
+                    </span>
+                    <input type="text" class="form-control" name="username" placeholder="@UserName" required>
                 </div>
-                <div class="card-footer">
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#about">
-                        About this project
-                    </button>
-                </div>
-            </div>
+                <button type="submit" class="btn btn-primary" href="/login">Log In</button>
+                <button type="submit" class="btn btn-primary" href="/signup">Sign Up</button>
+            </form>
+        </div>
+        <div class="card-footer">
+            <p type="button" class="text-muted" data-bs-toggle="modal" data-bs-target="#about">
+                About this project
+            </p>
         </div>
     </div>
 </section>

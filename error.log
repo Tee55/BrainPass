@@ -1,7 +1,7 @@
 WARNING:werkzeug: * Running on all addresses.
    WARNING: This is a development server. Do not use it in a production deployment.
 INFO:werkzeug: * Running on http://192.168.1.107:9000/ (Press CTRL+C to quit)
-INFO:werkzeug:127.0.0.1 - - [11/Dec/2021 19:59:33] "GET / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [11/Dec/2021 20:42:07] "GET / HTTP/1.1" 200 -
 ERROR:root:An error occurred during a request.
 Traceback (most recent call last):
   File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\app.py", line 1516, in full_dispatch_request
@@ -17,7 +17,6 @@ Traceback (most recent call last):
   File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\werkzeug\utils.py", line 847, in send_from_directory
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-INFO:werkzeug:127.0.0.1 - - [11/Dec/2021 19:59:33] "[33mGET /static/css/ColorTheme.css HTTP/1.1[0m" 404 -
 ERROR:root:An error occurred during a request.
 Traceback (most recent call last):
   File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\app.py", line 1516, in full_dispatch_request
@@ -33,9 +32,9 @@ Traceback (most recent call last):
   File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\werkzeug\utils.py", line 847, in send_from_directory
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-INFO:werkzeug:127.0.0.1 - - [11/Dec/2021 19:59:33] "[33mGET /static/javascript/util.js HTTP/1.1[0m" 404 -
-INFO:werkzeug:127.0.0.1 - - [11/Dec/2021 19:59:33] "[36mGET /static/brain.png HTTP/1.1[0m" 304 -
-INFO:werkzeug:127.0.0.1 - - [11/Dec/2021 19:59:33] "[36mGET /static/css/base.css HTTP/1.1[0m" 304 -
+INFO:werkzeug:127.0.0.1 - - [11/Dec/2021 20:42:07] "[33mGET /static/css/ColorTheme.css HTTP/1.1[0m" 404 -
+INFO:werkzeug:127.0.0.1 - - [11/Dec/2021 20:42:07] "[33mGET /static/javascript/util.js HTTP/1.1[0m" 404 -
+INFO:werkzeug:127.0.0.1 - - [11/Dec/2021 20:42:08] "[36mGET /static/css/base.css HTTP/1.1[0m" 304 -
 ERROR:root:An error occurred during a request.
 Traceback (most recent call last):
   File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\app.py", line 1516, in full_dispatch_request
@@ -51,4 +50,4 @@ Traceback (most recent call last):
   File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\werkzeug\utils.py", line 847, in send_from_directory
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-INFO:werkzeug:127.0.0.1 - - [11/Dec/2021 19:59:33] "[33mGET /static/javascript/util.js HTTP/1.1[0m" 404 -
+INFO:werkzeug:127.0.0.1 - - [11/Dec/2021 20:42:08] "[33mGET /static/javascript/util.js HTTP/1.1[0m" 404 -
