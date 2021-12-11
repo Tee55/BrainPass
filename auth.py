@@ -270,9 +270,8 @@ class EEGutil:
                   epochs=350, callbacks=callbacks)
         model.save_weights(os.path.join("model", "model.h5"))
 
-        predictions = model.predict(x)
-        acc = accuracy_score(y, predictions)
-        print("Accuracy: {}".format(acc))
+        eval = model.evaluate(x)
+        print(eval)
 
 
 if __name__ == '__main__':

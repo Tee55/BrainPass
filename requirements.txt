@@ -8,5 +8,5 @@ scipy
 scikit-learn
 progress
 matplotlib
-mne
-mlxtend
+Flask-Login
+Flask-SQLAlchemy

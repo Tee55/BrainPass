@@ -1,54 +1,78 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
 
-<html>
+{% block styles %}
+{% endblock %}
 
-<head>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
-    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css')}}">
 
-</head>
+{% block content %}
 
-<style>
-    #brain {
-        width: 80%;
-    }
+<!-- Modal -->
+<div class="modal fade" id="about" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">About this project</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Biometric authentication methods that have been used nowadays still have
+                numerous potential security issues. Therefore, we investigate an authentication method
+                using brainwave instead since brainwave is unique for each individual and it is difficult to be
+                mimicked. In addition, we invent a software that uses brainwave as authentication method.
+                Brainwave is applied to an innovation in various fields. The brainwave signals we observed is
+                large-scale oscillations which can be measured by electroencephalography (EEG). In order to
+                obtain brainwave signals, we use Visual Evoked Potentials (VEP) to stimulate the occipital
+                lobe that controls visibility of human. People responds to the stimuli differently and has
+                different brainwave signals, so it shows that the authentication method using brainwave can
+                be used to authenticate identity of person. This authentication method has high level of
+                security and it is difficult to be physically imitated. The software can also analyze the proper
+                visual stimulator for each individual user. Software enhancement can significantly increase
+                the accuracy when increasing the amount of data in database. In the experiment, we firstly
+                collected EEG data which are stimulated by VEP using set of 260 Snodgrass-Vanderwart
+                pictures and Checkerboard pattern. Afterward, we extract feature of EEG data and compute
+                in user authentication using deep learning algorithm. In conclusion, the results show that our
+                authentication method using brainwave demonstrates in achieving high verification accuracy
+                and can be applied with some improvement in the future.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-    p {
-        color: #636363;
-    }
-</style>
+<section class="container text-center">
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <h3 class="card-title">
+                    Brainwave authentication using visual stimulus
+                </h3>
+                <h5 class="card-title">
+                    By Mahidol Wittayanusorn School
+                </h5>
+                <div class="card-body">
+                    <form id="myForm" action="/" method="post" enctype="multipart/form-data">
+                        <i class="fas fa-brain"></i>
+                        <h1>Please sign in</h1>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">
+                                <i class="far fa-user-circle"></i>
+                            </span>
+                            <input type="text" class="form-control" name="username" placeholder="@UserName" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" href="/login">Log In</button>
+                        <button type="submit" class="btn btn-primary" href="/signup">Sign Up</button>
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#about">
+                        About this project
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
-<body>
-    <hgroup>
-        <h1>Brainwave authentication <br>using visual stimulus</h1>
-        <h3>By Mahidol Wittayanusorn School</h3>
-    </hgroup>
-    <form>
-        <center>
-            <a href="/initialize-board/">
-                <img src="{{ url_for('static', filename = 'brain.png') }}" id="brain">
-            </a>
-            <p>Click picture to connect to mobile</p>
-        </center>
-
-        <a href="/name-login/">
-            <button type="button" class="button buttonBlue">Login
-    </button>
-        </a>
-
-        <a href="/name-signup/">
-            <button type="button" class="button buttonBlue">Sign up
-  </button>
-        </a>
-        <footer>
-            <a href="/about/">
-                <p>About this project</p>
-            </a>
-        </footer>
-    </form>
-</body>
-
-</html>
+{% endblock %}

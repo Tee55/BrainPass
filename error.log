@@ -1,20 +1,54 @@
 WARNING:werkzeug: * Running on all addresses.
    WARNING: This is a development server. Do not use it in a production deployment.
 INFO:werkzeug: * Running on http://192.168.1.107:9000/ (Press CTRL+C to quit)
-INFO:werkzeug:127.0.0.1 - - [07/Dec/2021 19:27:50] "GET / HTTP/1.1" 200 -
-INFO:werkzeug:127.0.0.1 - - [07/Dec/2021 19:27:51] "[36mGET /static/brain.png HTTP/1.1[0m" 304 -
-INFO:werkzeug:127.0.0.1 - - [07/Dec/2021 19:27:51] "[36mGET /static/css/index.css HTTP/1.1[0m" 304 -
+INFO:werkzeug:127.0.0.1 - - [11/Dec/2021 19:59:33] "GET / HTTP/1.1" 200 -
 ERROR:root:An error occurred during a request.
 Traceback (most recent call last):
   File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\app.py", line 1516, in full_dispatch_request
     rv = self.dispatch_request()
-  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\app.py", line 1492, in dispatch_request
-    self.raise_routing_exception(req)
-  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\app.py", line 1474, in raise_routing_exception
-    raise request.routing_exception  # type: ignore
-  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\ctx.py", line 367, in match_request
-    result = self.url_adapter.match(return_rule=True)  # type: ignore
-  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\werkzeug\routing.py", line 2041, in match
+  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\app.py", line 1502, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**req.view_args)
+  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\app.py", line 515, in <lambda>
+    view_func=lambda **kw: self_ref().send_static_file(**kw),  # type: ignore # noqa: B950
+  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\scaffold.py", line 332, in send_static_file
+    return send_from_directory(
+  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\helpers.py", line 700, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore
+  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\werkzeug\utils.py", line 847, in send_from_directory
     raise NotFound()
 werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
-INFO:werkzeug:127.0.0.1 - - [07/Dec/2021 19:27:51] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:127.0.0.1 - - [11/Dec/2021 19:59:33] "[33mGET /static/css/ColorTheme.css HTTP/1.1[0m" 404 -
+ERROR:root:An error occurred during a request.
+Traceback (most recent call last):
+  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\app.py", line 1516, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\app.py", line 1502, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**req.view_args)
+  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\app.py", line 515, in <lambda>
+    view_func=lambda **kw: self_ref().send_static_file(**kw),  # type: ignore # noqa: B950
+  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\scaffold.py", line 332, in send_static_file
+    return send_from_directory(
+  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\helpers.py", line 700, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore
+  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\werkzeug\utils.py", line 847, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+INFO:werkzeug:127.0.0.1 - - [11/Dec/2021 19:59:33] "[33mGET /static/javascript/util.js HTTP/1.1[0m" 404 -
+INFO:werkzeug:127.0.0.1 - - [11/Dec/2021 19:59:33] "[36mGET /static/brain.png HTTP/1.1[0m" 304 -
+INFO:werkzeug:127.0.0.1 - - [11/Dec/2021 19:59:33] "[36mGET /static/css/base.css HTTP/1.1[0m" 304 -
+ERROR:root:An error occurred during a request.
+Traceback (most recent call last):
+  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\app.py", line 1516, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\app.py", line 1502, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**req.view_args)
+  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\app.py", line 515, in <lambda>
+    view_func=lambda **kw: self_ref().send_static_file(**kw),  # type: ignore # noqa: B950
+  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\scaffold.py", line 332, in send_static_file
+    return send_from_directory(
+  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\flask\helpers.py", line 700, in send_from_directory
+    return werkzeug.utils.send_from_directory(  # type: ignore
+  File "C:\Users\teera\Documents\Workspace\PYTHON 3 WORKSPACE\BrainPass\env\lib\site-packages\werkzeug\utils.py", line 847, in send_from_directory
+    raise NotFound()
+werkzeug.exceptions.NotFound: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+INFO:werkzeug:127.0.0.1 - - [11/Dec/2021 19:59:33] "[33mGET /static/javascript/util.js HTTP/1.1[0m" 404 -

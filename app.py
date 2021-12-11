@@ -1,317 +1,55 @@
-from flask import Flask, render_template, redirect, request, url_for, flash
-import argparse
-from flask import jsonify
-import serial
-import struct
-import time
-import timeit
-import atexit
-import logging
-import threading
-import emotiv_epoc as emotiv
-from multiprocessing import Pool
-import webbrowser
 import os
+import string
+import json
+from flask import Flask, request, redirect, render_template, request, url_for, flash, jsonify, send_from_directory, Response
+import logging
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import login_user, current_user, UserMixin, LoginManager, logout_user, login_required
+import csv
+import shutil
+import pandas as pd
+import random
+import time
+import webbrowser
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
+app.config.from_object(__name__)
 
+db = SQLAlchemy(app)
 
-class EEG_data(threading.Thread):
-    def __init__(self):
-        self.data = list()
-        self.board = emotiv.emotiv_device()
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20))
 
-    def streaming(self):
-        self.data = []
-        self.board.start_streaming(self.set_data)
+#######################################################################
+# Login manager
+#######################################################################
+login_manager = LoginManager()
+login_manager.init_app(app)
+@login_manager.user_loader
 
-    def set_data(self, sample):
-        print(sample)
-        self.data.append(sample)
-
-    def get_data(self):
-        return self.data
-
-
-session_1 = []
-session_2 = []
-session_3 = []
-session_4 = []
-session_5 = []
-
-global device
-global count
-
-
-def set_count():
-    global count
-    count = 0
-
-
-def initialize_board():
-    if 'device' in globals():
-        pass
-    else:
-        global device
-        device = EEG_data()
-
-
-class myThread(threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self, target=self.run, daemon=True)
-
-    def run(self):
-        device.streaming()
-
-
-# Create new threads
-thread = myThread()
-
+#######################################################################
+# User loader
+#######################################################################
+def user_loader(user_id):
+    return User.query.get(user_id)
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
+@app.route('/instructions')
+def instruction():
+    return render_template('instructions.html')
 
-@app.route('/about/')
-def about_this():
-    return render_template('about_this_project.html')
-
-
-@app.route('/initialize-board/')
-def initialize():
-    try:
-        initialize_board()
-        return redirect(url_for('mobile'))
-    except OSError as e:
-        return render_template('device_error.html')
-
-
-@app.route('/mobile-check/')
-def mobile():
-    return render_template('mobile_check.html')
-
-
-@app.route('/mobile-get-train-1/')
-def mobile_train_1():
-    thread.run()
-    return render_template('mobile_train.html')
-
-
-@app.route('/mobile-get-train-2/')
-def mobile_train_2():
-    session_3.append(device.get_data())
-    thread.run()
-    return render_template('mobile_train.html')
-
-
-@app.route('/mobile-get-train-3/')
-def mobile_train_3():
-    session_3.append(device.get_data())
-    thread.run()
-    return render_template('mobile_train.html')
-
-
-@app.route('/mobile-get-train-4/')
-def mobile_train_4():
-    session_3.append(device.get_data())
-    thread.run()
-    return render_template('mobile_train.html')
-
-
-@app.route('/mobile-get-train-finish/')
-def mobile_train_finish():
-    session_3.append(device.get_data())
-    thread.__init__()
-    return render_template('mobile_train_finish.html')
-
-
-@app.route('/mobile-get-test/')
-def mobile_run():
-    thread.run()
-    return render_template('mobile_test.html')
-
-
-@app.route('/mobile-get-test-finish/')
-def mobile_test_finish():
-    session_4.append(device.get_data())
-    thread.__init__()
-    return render_template('mobile_test_finish.html')
-
-
-@app.route('/name-signup/', methods=['GET', 'POST'])
-def name_sign_in():
-    if not session_1:
-        pass
-    else:
-        del session_1[:]
-    try:
-        connection = pymysql.connect(host='teerapaths.ddns.net', port=3306, user='root', password='Pass_Word123456', db='brainwave')
-        cursor = connection.cursor()
-        cursor.execute("SHOW TABLES")
-        username_list = [item[0] for item in cursor.fetchall()]
-        connection.close()
-        if request.method == 'POST':
-            if request.form['submit'] == 'Submit':
-                name = request.form['text']
-                if name in username_list:
-                    flash('Username exist!')
-                    return render_template('name_signup.html')
-                elif not name:
-                    flash('Insert username!')
-                    return render_template('name_signup.html')
-                else:
-                    session_1.append(name)
-                    try:
-                        set_count()
-                        initialize_board()
-                    except OSError as e:
-                        return render_template('device_error.html')
-                    return redirect(url_for('instruction_signup'))
-            elif request.form['submit'] == 'Go back':
-                return redirect(url_for('index'))
-        else:
-            return render_template('name_signup.html')
-    except pymysql.Error as e:
-        print(e)
-        print("Database not connect!")
-        return render_template('database_error.html')
-    except serial.SerialException as e:
-        return render_template('device_error.html')
-
-
-@app.route('/instruction/', methods=['GET', 'POST'])
-def instruction_signup():
-    return render_template('instruction_signup.html')
-
-
-@app.route('/signup-stimulus/', methods=['GET', 'POST'])
-def sign_up():
-    thread.start()
-    return render_template('checkerboard_snordgrass_signup.html')
-
-
-@app.route('/eye-rest/')
-def sign_up_2():
-    session_1.append(device.get_data())
-    thread.__init__()
-    global count
-    count += 1
-    if count >= 4:
-        return render_template('evaluation.html')
-    else:
-        return redirect(url_for('stop_stimulus'))
-
-
-@app.route('/stop-stimulus/')
-def stop_stimulus():
-    global count
-    flash('Data collect: ' + str(count))
-    return render_template('stop_stimulus.html')
-
-
-@app.route('/evaluation/')
-def evaluation():
-    return render_template('evaluation.html')
-
-
-@app.route('/sign-up-complete/')
-def signupCompleted():
-    return render_template('signup_complete.html')
-
-
-@app.route('/name-login/', methods=['GET', 'POST'])
-def name_login():
-    if not session_2:
-        pass
-    else:
-        del session_2[:]
-    try:
-        connection = pymysql.connect(host='teerapaths.ddns.net', port=3306, user='root', password='Pass_Word123456', db='brainwave')
-        cursor = connection.cursor()
-        cursor.execute("SHOW TABLES")
-        username_list = [item[0] for item in cursor.fetchall()]
-        connection.close()
-        if request.method == 'POST':
-            if request.form['submit'] == 'Submit':
-                name = request.form['text']
-                print("We are here")
-                if not name in username_list:
-                    flash('Username does not exist!')
-                    return render_template('name_login.html')
-                elif not name:
-                    flash('Insert username!')
-                    return render_template('name_login.html')
-                else:
-                    session_2.append(name)
-                    try:
-                        set_count()
-                        initialize_board()
-                        return redirect(url_for('instruction_login'))
-                    except OSError as e:
-                        return render_template('device_error.html')
-                    except pymysql.Error as e:
-                        print(e)
-                        print("Database not connect!")
-                        return render_template('database_error.html')
-
-            elif request.form['submit'] == 'Go back':
-                return redirect(url_for('index'))
-        else:
-            return render_template('name_login.html')
-    except serial.SerialException as e:
-        return render_template('device_error.html')
-
-
-@app.route('/instruction-login/', methods=['GET', 'POST'])
-def instruction_login():
-    return render_template('instruction_login.html')
-
-
-@app.route('/login-stimulus/')
+@app.route('/login')
 def login():
-    thread.start()
-    global start_com
-    start_com = time.time()
-    return render_template('checkerboard_snordgrass_login.html')
+    return render_template('login.html')
 
-
-@app.route('/processing/')
-def processing():
-    session_2.append(device.get_data())
-    thread.__init__()
-    return render_template('processing.html')
-
-
-@app.route('/login-complete/')
-def login_complete():
-    flash(session_2[0], category="username")
-    present_time = time.strftime('%X %x')
-    com_time = time.time() - start_com
-    flash(present_time, category="time")
-    flash(com_time, category="time_com")
-    return render_template('information.html')
-
-
-@app.route('/login-failed/')
-def login_failed():
-    return render_template('login_failed.html')
-
-
-@app.route('/improve-model/', methods=['POST', 'GET'])
-def improve():
-    thread.start()
-    return render_template('checkerboard_snordgrass_improve.html')
-
-
-@app.route('/improve-finish/')
-def improve_finish():
-    session_5.append(session_2[0])
-    session_5.append(device.get_data())
-    thread.__init__()
-    return render_template('improve_finish.html')
-
+@app.route('/signup')
+def signup():
+    return render_template('signup.html')
 
 ##################################################################################
 # Error handler
