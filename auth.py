@@ -77,10 +77,8 @@ class EEGutil:
         return acc
 
     def load_dataset(self):
-
         x = []
         y = []
-
         channels = ["O1", "O2"]
 
         for id_dir in os.listdir(self.DATASET_DIR):
@@ -104,16 +102,12 @@ class EEGutil:
                 df = df.drop(df.index[self.sampling_rate * self.duration:])
                 x.append([df[channel] for channel in channels])
                 y.append(id_dir)
-
         print(headers)
-        
         self.num_people = len(os.listdir(self.DATASET_DIR))
 
         x = np.array(x)
         y = self.label_encoder.fit_transform(y)
-        
         y = np.reshape(y, (-1, 1))
-
         return x, y
 
     def preprocessing(self, x, combi=None):
@@ -143,30 +137,29 @@ class EEGutil:
 
             features = np.array([delta_avg, theta_avg,
                                 alpha_avg, beta_avg, gamma_avg])
-            
+
             if combi != None:
                 features = np.array([features[index] for index in combi])
-                
+
             new_x.append(features)
 
         x = np.array(new_x)
 
         df = pd.DataFrame(x)
-        #print(df)
+        # print(df)
 
         return x
-    
+
     def fisher(self, x, y):
-        
+
         x = self.preprocessing(x)
-        
+
         # Fisher score
-        fisher_score,_ = chi2(x, y)
+        fisher_score, _ = chi2(x, y)
         idx = np.argsort(fisher_score)
         idx = idx[::-1]
         return idx
-    
-    
+
     def create_model(self, input_shape):
         input_layer = Input(input_shape)
         conv1 = Conv1D(filters=64, kernel_size=3, padding="same")(input_layer)
@@ -190,46 +183,47 @@ class EEGutil:
     def feature_selection(self, x, y):
         idx = self.fisher(x, y)
         print("Fisher Features Index (High -> Low): {}".format(idx))
-        
+
         # Feature selection
         all_acc = []
         all_combi = []
-        
+
         for combi_number in range(1, len(idx)+1):
             combi_idx = combinations(idx, combi_number)
             combi_idx = list(combi_idx)
-            
+
             for combi in combi_idx:
-                
+
                 data_x = self.preprocessing(x, combi)
-                
+
                 X_train, X_test, y_train, y_test = train_test_split(
                     data_x, y, test_size=0.33)
 
                 knn = KNeighborsClassifier(n_neighbors=5)
                 knn.fit(X_train, y_train)
-                
+
                 print("=====Combination {}=====".format(combi))
 
                 predictions = knn.predict(X_test)
                 acc = accuracy_score(y_test, predictions)
                 print("KNN Accuracy: {}".format(acc))
-                
+
                 all_acc.append(acc)
                 all_combi.append(combi)
-                
+
         all_acc = np.array(all_acc)
-                
+
         print("Highest Accuracy: {}".format(np.max(all_acc)))
         print("With Combination: {}".format(all_combi[np.argmax(all_acc)]))
-        
+
         return all_combi[np.argmax(all_acc)]
-    
+
     def filter(self, x, low_fs, high_fs):
-        b, a = butter(5, [low_fs, high_fs], btype='band', fs=self.sampling_rate)
+        b, a = butter(5, [low_fs, high_fs], btype='band',
+                      fs=self.sampling_rate)
         channel = lfilter(b, a, x)
         return x
-    
+
     def cleanTensorflowLogs(self):
         LOG_DIR = ['logs/']
         for logdir in LOG_DIR:
@@ -240,46 +234,47 @@ class EEGutil:
                     shutil.rmtree(subfolder)
                 else:
                     os.remove(subfolder)
-        
+
     def main(self):
-        
+
         self.cleanTensorflowLogs()
-        
+
         x, y = self.load_dataset()
         print("Original Shape: {}, {}".format(x.shape, y.shape))
-        
-        
+
         new_x = []
         for sample in x:
             data = np.empty((sample.shape[1], sample.shape[0]))
             for i, channel in enumerate(sample):
                 for j, each_point in enumerate(channel):
                     data[j][i] = each_point
-                
+
             data = preprocessing.normalize(data)
-            
+
             new_x.append(data)
 
         x = np.array(new_x)
-        
+
         print("Train shape: {}, {}".format(x.shape, y.shape))
-        
+
         tensorboard = TensorBoard(log_dir='logs', update_freq='batch')
         callbacks = [tensorboard]
-        
+
         model = self.create_model(input_shape=x.shape[1:])
         model.compile(
             optimizer="adam",
             loss="sparse_categorical_crossentropy",
             metrics=["sparse_categorical_accuracy"],
         )
-        model.fit(x, y, batch_size=self.batch_size, epochs=350, callbacks=callbacks)
+        model.fit(x, y, batch_size=self.batch_size,
+                  epochs=350, callbacks=callbacks)
         model.save_weights(os.path.join("model", "model.h5"))
-        
+
         predictions = model.predict(x)
         acc = accuracy_score(y, predictions)
         print("Accuracy: {}".format(acc))
-        
+
+
 if __name__ == '__main__':
     eegutil = EEGutil()
     eegutil.main()
