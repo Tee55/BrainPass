@@ -251,11 +251,11 @@ class EEGutil:
         
         new_x = []
         for sample in x:
-            data = []
-            for channel_1, channel_2 in zip(sample[0], sample[1]):
-                data.append([channel_1, channel_2])
+            data = np.empty((sample.shape[1], sample.shape[0]))
+            for i, channel in enumerate(sample):
+                for j, each_point in enumerate(channel):
+                    data[j][i] = each_point
                 
-            data = np.array(data)
             data = preprocessing.normalize(data)
             
             new_x.append(data)
@@ -271,7 +271,7 @@ class EEGutil:
         model.compile(
             optimizer="adam",
             loss="sparse_categorical_crossentropy",
-            metrics=["accuracy"],
+            metrics=["sparse_categorical_accuracy"],
         )
         model.fit(x, y, batch_size=self.batch_size, epochs=350, callbacks=callbacks)
         model.save_weights(os.path.join("model", "model.h5"))
