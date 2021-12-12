@@ -34,7 +34,13 @@ class EEG_device(threading.Thread):
     def __init__(self, epoc):
         self.epoc = epoc
         self.streaming = False
-
+        self.get_stimulus()
+        
+    def get_stimulus(self):
+        self.imageFileList = []
+        for imageFile in os.listdir(os.path.join("static", "images")):
+            self.imageFileList.append(imageFile)
+            
     def start_streaming(self):
         self.streaming = True
         while self.streaming:
@@ -63,6 +69,15 @@ def user_loader(user_id):
 epoc = Epoc()
 device = EEG_device(epoc)
 
+#######################################################################
+# Web icon
+#######################################################################
+
+
+@app.route('/favicon.ico', methods=['GET', 'POST'])
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     db.create_all()
@@ -79,7 +94,15 @@ def index():
 
 @app.route('/instructions', methods=['GET', 'POST'])
 def instructions():
-    return render_template('instructions.html')
+    images = device.imageFileList
+    return render_template('instructions.html', **locals())
+
+@app.route("/display/<string:filename>", methods=['GET', 'POST'])
+def display(filename):
+    for root, dir, fileList in os.walk(os.path.join("static", "images")):
+        for file in fileList:
+            if filename.lower() in file.lower():
+                return send_from_directory(root, file, as_attachment=True)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
