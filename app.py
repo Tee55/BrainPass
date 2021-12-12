@@ -11,6 +11,10 @@ import pandas as pd
 import random
 import time
 import webbrowser
+import serial
+from emotiv import Epoc
+import threading
+
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -18,9 +22,27 @@ app.config.from_object(__name__)
 
 db = SQLAlchemy(app)
 
+
+#######################################################################
+# Classes
+#######################################################################
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20))
+    
+class EEG_device(threading.Thread):
+    def __init__(self, epoc):
+        self.epoc = epoc
+        self.streaming = False
+
+    def start_streaming(self):
+        self.streaming = True
+        while self.streaming:
+            data = self.epoc.get_raw()
+            times = self.epoc.times
+            
+    def stop_streaming(self):
+        self.streaming = False
 
 #######################################################################
 # Login manager
@@ -35,7 +57,13 @@ login_manager.init_app(app)
 def user_loader(user_id):
     return User.query.get(user_id)
 
-@app.route('/')
+#######################################################################
+# Emotiv device
+#######################################################################
+epoc = Epoc()
+device = EEG_device(epoc)
+
+@app.route('/', methods=['GET', 'POST'])
 def index():
     db.create_all()
     if request.method == "POST":
@@ -45,19 +73,19 @@ def index():
             db.session.add(user)
         user = User.query.filter_by(username=username).first()
         login_user(user, remember=False)
-        return redirect(url_for("login"))
+        return redirect(url_for("instructions"))
     else:
         return render_template('index.html')
 
-@app.route('/instructions')
-def instruction():
+@app.route('/instructions', methods=['GET', 'POST'])
+def instructions():
     return render_template('instructions.html')
 
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     return render_template('login.html')
 
-@app.route('/signup')
+@app.route('/signup', methods=['GET', 'POST'])
 def signup():
     return render_template('signup.html')
 
