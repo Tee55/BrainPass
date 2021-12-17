@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block styles %}
+{% endblock %}
+
+
+{% block content %}
+
+
+<section class="container w-75">
+    <!-- Carousel pages -->
+    <div id="slider" class="carousel carousel-dark" data-interval="false" data-bs-keyboard="true">
+
+        <!-- Pages Content -->
+        <div class="carousel-inner" role="listbox">
+            {% for image in images %}
+            <div class="carousel-item{% if loop.first %} active{% endif %} text-center">
+                <img src="{{ url_for('display', filename=image) }}" alt="...">
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</section>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+    var slider = $('#slider');
+    var trial_count = 0;
+    var stimulus_count = 0;
+
+    $(document).ready(function () {
+        trial();
+    });
+
+    function trial() {
+        setInterval(stimulus, 300);
+    }
+
+    function stimulus() {
+
+        if (stimulus_count >= 7) {
+            stimulus_count = 0;
+            clearInterval(stimulus);
+        } else {
+            slider.carousel('next');
+            stimulus_count += 1
+        }
+
+    }
+</script>
+
+
+{% endblock %}
