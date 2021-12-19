@@ -7,20 +7,67 @@
 {% block content %}
 
 
-<section class="container w-75">
-    <!-- Carousel pages -->
-    <div id="slider" class="carousel carousel-dark" data-interval="false" data-bs-keyboard="true">
-
-        <!-- Pages Content -->
-        <div class="carousel-inner" role="listbox">
-            {% for image in images %}
-            <div class="carousel-item{% if loop.first %} active{% endif %} text-center">
-                <img src="{{ url_for('display', filename=image) }}" alt="...">
+<!-- Modal -->
+<div class="modal fade" id="instructions" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Instructions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            {% endfor %}
+            <div class="modal-body">
+                <p>Description</p>
+                <div class="d-flex justify-content-center">
+                    <!-- Carousel pages -->
+                    <div id="slider" class="carousel carousel-dark" data-interval="false" data-bs-keyboard="true">
+
+                        <!-- Pages Content -->
+                        <div class="carousel-inner" role="listbox">
+                            {% for image in images %}
+                            <div class="carousel-item{% if loop.first %} active{% endif %} text-center">
+                                <img src="{{ url_for('display', filename=image) }}" alt="..." style="height: 30vh;width: 30vh;">
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Control Button -->
+                        <button class="carousel-control-prev" type="button" data-bs-target="#slider"
+                            data-bs-slide="prev" onclick="$('#slider').carousel('prev')">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#slider"
+                            data-bs-slide="next" onclick="$('#slider').carousel('next')">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">OK, I understand</button>
+            </div>
         </div>
     </div>
+</div>
 
+<section class="container w-75">
+    <div class="row">
+        <div class="col text-center">
+            <!-- Carousel pages -->
+            <div id="slider" class="carousel carousel-dark" data-interval="false" data-bs-keyboard="true">
+
+                <!-- Pages Content -->
+                <div class="carousel-inner" role="listbox">
+                    {% for image in images %}
+                    <div class="carousel-item{% if loop.first %} active{% endif %} text-center">
+                        <img src="{{ url_for('display', filename=image) }}" alt="...">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 
 {% endblock %}
@@ -32,13 +79,27 @@
     var slider = $('#slider');
     var trial_count = 0;
     var stimulus_count = 0;
+    var instructions = $('#instructions');
 
     $(document).ready(function () {
+        instructions.modal('show');
+    });
+
+    instructions.on('hidden.bs.modal', function () {
         trial();
     });
 
     function trial() {
-        setInterval(stimulus, 300);
+        $.ajax({
+            type: "POST",
+            url: "/start",
+            success: function (data) {
+                setInterval(stimulus, 300);
+            },
+            error: function (request, status, error) {
+                alert(request.responseText);
+            }
+        });
     }
 
     function stimulus() {
@@ -46,6 +107,20 @@
         if (stimulus_count >= 7) {
             stimulus_count = 0;
             clearInterval(stimulus);
+            trial_count += 1;
+
+            if (trial_count >= 5) {
+                $.ajax({
+                    type: "POST",
+                    url: "/stop",
+                    success: function (data) {},
+                    error: function (request, status, error) {
+                        alert(request.responseText);
+                    }
+                });
+            } else {
+                setInterval(stimulus, 300);
+            }
         } else {
             slider.carousel('next');
             stimulus_count += 1

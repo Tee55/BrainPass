@@ -12,7 +12,7 @@ import random
 import time
 import webbrowser
 import serial
-from emotiv import Epoc
+from emotiv import EEG_device
 import threading
 
 
@@ -22,33 +22,12 @@ app.config.from_object(__name__)
 
 db = SQLAlchemy(app)
 
-
 #######################################################################
 # Classes
 #######################################################################
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20))
-    
-class EEG_device(threading.Thread):
-    def __init__(self, epoc):
-        self.epoc = epoc
-        self.streaming = False
-        self.get_stimulus()
-        
-    def get_stimulus(self):
-        self.imageFileList = []
-        for imageFile in os.listdir(os.path.join("static", "images")):
-            self.imageFileList.append(imageFile)
-            
-    def start_streaming(self):
-        self.streaming = True
-        while self.streaming:
-            data = self.epoc.get_raw()
-            times = self.epoc.times
-            
-    def stop_streaming(self):
-        self.streaming = False
 
 #######################################################################
 # Login manager
@@ -66,8 +45,7 @@ def user_loader(user_id):
 #######################################################################
 # Emotiv device
 #######################################################################
-epoc = Epoc()
-device = EEG_device(epoc)
+device = EEG_device()
 
 #######################################################################
 # Web icon
@@ -88,14 +66,13 @@ def index():
             db.session.add(user)
         user = User.query.filter_by(username=username).first()
         login_user(user, remember=False)
-        return redirect(url_for("instructions"))
+        
+        if "login" in request.form:
+            return redirect(url_for("login"))
+        elif "signup" in request.form:
+            return redirect(url_for("signup"))
     else:
         return render_template('index.html')
-
-@app.route('/instructions', methods=['GET', 'POST'])
-def instructions():
-    images = device.imageFileList
-    return render_template('instructions.html', **locals())
 
 @app.route("/display/<string:filename>", methods=['GET', 'POST'])
 def display(filename):
@@ -106,11 +83,22 @@ def display(filename):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    return render_template('login.html')
+    images = device.imageFileList
+    return render_template('login.html', **locals())
+
+@app.route('/start', methods=['GET', 'POST'])
+def start():
+    device.start_streaming()
+    return redirect(url_for(request.referrer))
+
+@app.route('/stop', methods=['GET', 'POST'])
+def stop():
+    device.stop_streaming()
+    return redirect(url_for(request.referrer))
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    return render_template('signup.html')
+    return render_template('signup.html', **locals())
 
 ##################################################################################
 # Error handler
