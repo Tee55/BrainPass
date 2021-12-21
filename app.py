@@ -1,19 +1,9 @@
 import os
-import string
-import json
 from flask import Flask, request, redirect, render_template, request, url_for, flash, jsonify, send_from_directory, Response
 import logging
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import login_user, current_user, UserMixin, LoginManager, logout_user, login_required
-import csv
-import shutil
-import pandas as pd
-import random
-import time
 import webbrowser
-import serial
-from emotiv import EEG_device
-import threading
 
 
 app = Flask(__name__)
