@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn import preprocessing
-from itertools import combinations
+from itertools import combinations, count
 from tensorflow.keras.layers import Input, Dense, Conv1D, Dropout, Flatten, MaxPooling1D, BatchNormalization, ReLU, GlobalAveragePooling1D
 from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.optimizers import Adam
@@ -72,7 +72,7 @@ class EEGutil:
         
         # Variable
         self.sampling_rate = 128
-        self.num_people = 10
+        self.num_people = 33
         self.duration = 3
         self.time_shift = 1
         
@@ -82,7 +82,9 @@ class EEGutil:
         channels = ["O1", "O2"]
         
         for id_dir in os.listdir("private_dataset/"):
-            for i in range(0, self.num_people):
+            
+            # 10 file for each person
+            for i in range(0, 10):
                 data_file = os.listdir(
                     os.path.join("private_dataset/", id_dir))[i]
                 general_info_df = pd.read_csv(os.path.join(
@@ -113,7 +115,7 @@ class EEGutil:
         
         # Variable
         self.sampling_rate = 512
-        self.num_people = 20
+        self.num_people = 30
         self.duration = 3
         self.time_shift = 1
         
@@ -127,10 +129,11 @@ class EEGutil:
         for i in range(0, self.num_people):
             data_list = []
             for stimul in stimulus:
-                data = df[df['id'] == i+1][df.label == stimul].raw_values.tolist()
+                raw_list = df[df['id'] == i+1][df.label == stimul].raw_values.tolist()
                 raw_data = []
-                for series in data:
-                    raw_data.extend(series)
+                for raw in raw_list:
+                    raw_data.extend(raw)
+                    
                 if len(raw_data) >= self.sampling_rate*self.duration:
                     raw_data = raw_data[0:self.sampling_rate*self.duration]
                     data_list.append(raw_data)
@@ -305,8 +308,10 @@ class EEGutil:
                   epochs=350, callbacks=callbacks)
         model.save_weights(os.path.join("model", "model.h5"))
 
-        eval = model.evaluate(x)
-        print(eval)
+        test_loss, test_acc = model.evaluate(x, y)
+
+        print("Test accuracy", test_acc)
+        print("Test loss", test_loss)
 
 
 if __name__ == '__main__':
