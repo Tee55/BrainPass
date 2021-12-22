@@ -1,4 +1,3 @@
-from numpy.lib.function_base import append
 import pandas as pd
 import os
 import numpy as np
@@ -17,23 +16,16 @@ from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import TensorBoard
 import shutil
+import json
+from argparse import ArgumentParser
 
 
 class EEGutil:
 
     def __init__(self):
         self.batch_size = 1
-        self.DATASET_DIR = "dataset/"
         self.label_encoder = LabelEncoder()
         self.onehot_encoder = OneHotEncoder()
-        self.duration = 3
-        self.time_shift = 1
-        self.n_samples = 10
-        self.sampling_rate = 128
-
-    def checkDir(self):
-        if not os.path.exists("dataset/"):
-            os.mkdir("dataset/")
 
     def bandpower(self, x, fmin, fmax):
         Pxx = fft(x)
@@ -76,17 +68,25 @@ class EEGutil:
         acc = score/len(predictions)
         return acc
 
-    def load_dataset(self):
+    def load_private_dataset(self):
+        
+        # Variable
+        self.sampling_rate = 128
+        self.num_people = 10
+        self.duration = 3
+        self.time_shift = 1
+        
         x = []
         y = []
+        
         channels = ["O1", "O2"]
-
-        for id_dir in os.listdir(self.DATASET_DIR):
-            for i in range(0, self.n_samples):
+        
+        for id_dir in os.listdir("private_dataset/"):
+            for i in range(0, self.num_people):
                 data_file = os.listdir(
-                    os.path.join(self.DATASET_DIR, id_dir))[i]
+                    os.path.join("private_dataset/", id_dir))[i]
                 general_info_df = pd.read_csv(os.path.join(
-                    self.DATASET_DIR, id_dir, data_file), delimiter=",", header=None, nrows=1, skipinitialspace=True)
+                    "private_dataset/", id_dir, data_file), delimiter=",", header=None, nrows=1, skipinitialspace=True)
                 general_info = {}
                 for col in general_info_df.columns:
                     text = general_info_df.iloc[0][col]
@@ -97,14 +97,45 @@ class EEGutil:
                 headers = general_info["labels"]
                 header_list = headers.split(" ")
 
-                df = pd.read_csv(os.path.join(self.DATASET_DIR, id_dir, data_file),
+                df = pd.read_csv(os.path.join("private_dataset/", id_dir, data_file),
                                  delimiter=",", names=header_list, skiprows=1, skipinitialspace=True)
                 df = df.drop(df.index[self.sampling_rate * self.duration:])
                 x.append([df[channel] for channel in channels])
                 y.append(id_dir)
         print(headers)
-        self.num_people = len(os.listdir(self.DATASET_DIR))
 
+        x = np.array(x)
+        y = self.label_encoder.fit_transform(y)
+        y = np.reshape(y, (-1, 1))
+        return x, y
+    
+    def load_public_dataset(self):
+        
+        # Variable
+        self.sampling_rate = 512
+        self.num_people = 20
+        self.duration = 3
+        self.time_shift = 1
+        
+        df = pd.read_csv(os.path.join("public_dataset/", "eeg-data.csv"), sep=",")
+        df.raw_values = df.raw_values.map(json.loads)
+        print(df.columns)
+        
+        stimulus = ["colorRound1-1", "colorRound1-2", "colorRound1-3", "colorRound1-4", "colorRound1-5", "colorRound1-6"]
+        x = []
+        y = []
+        for i in range(0, self.num_people):
+            data_list = []
+            for stimul in stimulus:
+                data = df[df['id'] == i+1][df.label == stimul].raw_values.tolist()
+                raw_data = []
+                for series in data:
+                    raw_data.extend(series)
+                if len(raw_data) >= self.sampling_rate*self.duration:
+                    raw_data = raw_data[0:self.sampling_rate*self.duration]
+                    data_list.append(raw_data)
+            x.append(data_list)
+            y.append(i)
         x = np.array(x)
         y = self.label_encoder.fit_transform(y)
         y = np.reshape(y, (-1, 1))
@@ -146,7 +177,7 @@ class EEGutil:
         x = np.array(new_x)
 
         df = pd.DataFrame(x)
-        # print(df)
+        #print(df)
 
         return x
 
@@ -221,7 +252,7 @@ class EEGutil:
     def filter(self, x, low_fs, high_fs):
         b, a = butter(5, [low_fs, high_fs], btype='band',
                       fs=self.sampling_rate)
-        channel = lfilter(b, a, x)
+        x = lfilter(b, a, x)
         return x
 
     def cleanTensorflowLogs(self):
@@ -235,13 +266,17 @@ class EEGutil:
                 else:
                     os.remove(subfolder)
 
-    def main(self):
+    def run(self, dataset_type="public"):
 
         self.cleanTensorflowLogs()
 
-        x, y = self.load_dataset()
+        if dataset_type == "public":
+            x, y = self.load_public_dataset()
+        else:
+            x, y = self.load_private_dataset()
+            
         print("Original Shape: {}, {}".format(x.shape, y.shape))
-
+        
         new_x = []
         for sample in x:
             data = np.empty((sample.shape[1], sample.shape[0]))
@@ -276,4 +311,10 @@ class EEGutil:
 
 if __name__ == '__main__':
     eegutil = EEGutil()
-    eegutil.main()
+    parser = ArgumentParser(description='EEG Authentication')
+    parser.add_argument(
+        '-d', '-dataset', '--dataset', default="public",
+        help='Choose dataset type (Public, Private)'
+    )
+    args = parser.parse_args()
+    eegutil.run(dataset_type=args.dataset)
