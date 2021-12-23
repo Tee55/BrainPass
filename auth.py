@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn import preprocessing
-from itertools import combinations, count
+from itertools import combinations
 from tensorflow.keras.layers import Input, Dense, Conv1D, Dropout, Flatten, MaxPooling1D, BatchNormalization, ReLU, GlobalAveragePooling1D
 from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.optimizers import Adam
@@ -18,8 +18,6 @@ from tensorflow.keras.callbacks import TensorBoard
 import shutil
 import json
 from argparse import ArgumentParser
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import ConfusionMatrixDisplay
 
 
 class EEGutil:
@@ -64,7 +62,7 @@ class EEGutil:
             alpha.append(alpha_val)
             beta.append(beta_val)
             gamma.append(gamma_val)
-        
+
         delta = np.mean(np.array(delta))
         theta = np.mean(np.array(theta))
         alpha = np.mean(np.array(alpha))
@@ -82,18 +80,18 @@ class EEGutil:
         return acc
 
     def load_private_dataset(self):
-        
+
         # Variable
         self.sampling_rate = 128
         self.num_people = 33
         self.duration = 3
         self.time_shift = 1
-        
+
         x = []
         y = []
 
         for id_dir in os.listdir("private_dataset/"):
-            
+
             # 10 file for each person
             for i in range(0, 10):
                 data_file = os.listdir(
@@ -120,31 +118,28 @@ class EEGutil:
         y = self.label_encoder.fit_transform(y)
         y = np.reshape(y, (-1, 1))
         return x, y
-    
+
     def load_public_dataset(self):
-        
+
         # Variable
         self.sampling_rate = 512
         self.num_people = 30
         self.duration = 3
         self.time_shift = 1
-        
-        df = pd.read_csv(os.path.join("public_dataset/", "eeg-data.csv"), sep=",")
+
+        df = pd.read_csv(os.path.join(
+            "public_dataset/", "eeg-data.csv"), sep=",")
         df.raw_values = df.raw_values.map(json.loads)
-        
+
         x = []
         y = []
         for i in range(0, self.num_people):
-            raw_list = df[df['id'] == i+1][df.label == "colorRound1-1"].raw_values.tolist()
-            raw_data = []
-            for raw in raw_list:
-                raw_data.extend(raw)
-                
-            if len(raw_data) >= self.sampling_rate*self.duration:
-                raw_data = raw_data[0:self.sampling_rate*self.duration]
-            x.append(raw_data)
-            y.append(i)
-            
+            raw_list = df[df['id'] == i+1][df.label ==
+                                           "colorRound1-2"].raw_values.tolist()
+            for raw_data in raw_list:
+                x.append(raw_data)
+                y.append(i)
+
         x = np.array(x)
         y = self.label_encoder.fit_transform(y)
         y = np.reshape(y, (-1, 1))
@@ -220,7 +215,8 @@ class EEGutil:
                 all_combi.append(combi)
 
         all_acc = np.array(all_acc)
-        print("Highest Accuracy({}) with Combination {}".format(np.max(all_acc), all_combi[np.argmax(all_acc)]))
+        print("Highest Accuracy({}) with Combination {}".format(
+            np.max(all_acc), all_combi[np.argmax(all_acc)]))
         return all_combi[np.argmax(all_acc)]
 
     def filter(self, x, f_range):
@@ -239,42 +235,9 @@ class EEGutil:
                     shutil.rmtree(subfolder)
                 else:
                     os.remove(subfolder)
-                    
-    def cal_cr_balance_cr(prediction, y_val):
-    
-        TP = 0
-        TN = 0
-        FP = 0
-        FN = 0
 
-        for index, (pred, y) in enumerate(zip(prediction, y_val)):
+    def features_extractions(self, x, combi=None):
 
-            if index < 10:
-                if pred == y:
-                    TP += 1
-                else:
-                    FP += 1
-            else:
-                if pred == y:
-                    TN += 1
-                else:
-                    FN += 1
-
-        CR = (TP+TN)/prediction.shape[0]
-
-        TPR = TP/(TP + FN)
-        TNR = TN/(FP + TN)
-
-        balance_CR = (TPR + TNR)/2
-
-        print([TP, FP, FN, TN])
-        print(CR)
-        print(balance_CR)
-
-        return CR, balance_CR
-                    
-    def features_extractions(self, x, combi):
-        
         new_x = []
         for series in x:
             delta_series = self.filter(series, self.delta)
@@ -282,15 +245,18 @@ class EEGutil:
             alpha_series = self.filter(series, self.alpha)
             beta_series = self.filter(series, self.beta)
             gamma_series = self.filter(series, self.gamma)
-            
-            features = [delta_series, theta_series, alpha_series, beta_series, gamma_series]
-            features = [features[index] for index in combi]
-            
+
+            features = [delta_series, theta_series,
+                        alpha_series, beta_series, gamma_series]
+
+            if combi:
+                features = [features[index] for index in combi]
+
             timeseries = []
             for i in range(len(delta_series)):
                 timeseries.append([feature[i] for feature in features])
             new_x.append(timeseries)
-        
+
         new_x = np.array(new_x)
         return new_x
 
@@ -302,13 +268,15 @@ class EEGutil:
             x, y = self.load_public_dataset()
         else:
             x, y = self.load_private_dataset()
-        
-        # scale & normalize
+
+        # scale & standardize & normalize
         x = preprocessing.minmax_scale(x)
+        x = preprocessing.scale(x)
         x = preprocessing.normalize(x)
-        
+
         combi = self.feature_selection(x, y)
-        x = self.features_extractions(x, combi)
+        #x = self.features_extractions(x, combi)
+        x = self.features_extractions(x)
 
         print("Train shape: {}, {}".format(x.shape, y.shape))
 
@@ -319,22 +287,42 @@ class EEGutil:
         model.compile(
             optimizer="adam",
             loss="sparse_categorical_crossentropy",
-            metrics=["sparse_categorical_accuracy"],
+            metrics=["sparse_categorical_accuracy"]
         )
-        model.fit(x, y, batch_size=self.batch_size,
-                  epochs=350, callbacks=callbacks)
-        model.save_weights(os.path.join("model", "model.h5"))
 
-        test_loss, test_acc = model.evaluate(x, y)
+        if os.path.exists(os.path.join("model", "model.h5")):
+            model.load_weights(os.path.join("model", "model.h5"))
+        else:
+            model.fit(x, y, batch_size=self.batch_size,
+                      epochs=100, callbacks=callbacks)
+            model.save_weights(os.path.join("model", "model.h5"))
 
-        print("Test accuracy", test_acc)
-        print("Test loss", test_loss)
-        
         preds = model.predict(x)
-        preds_classes = np.argmax(preds, axis=-1)
+        preds_classes_index = np.argmax(preds, axis=-1)
         preds_class_prob = np.max(preds, axis=-1)
-        
-        print(preds_class_prob)
+
+        TP = 0
+        TN = 0
+        FP = 0
+        FN = 0
+        for gt, y_pred_index, y_prob in zip(y, preds_classes_index, preds_class_prob):
+            if y_prob >= 0.5:
+                if y[y_pred_index] == gt:
+                    TP += 1
+                else:
+                    TN += 1
+            else:
+                if y[y_pred_index] == gt:
+                    FP += 1
+                else:
+                    FN += 1
+
+        TPR = TP/(TP + FN)
+        TNR = TN/(FP + TN)
+
+        print("TP, TN, FP, FN: {}".format([TP, TN, FP, FN]))
+        print("TPR, TNR: {}".format([TPR, TNR]))
+
 
 if __name__ == '__main__':
     eegutil = EEGutil()
