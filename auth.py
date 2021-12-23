@@ -331,7 +331,10 @@ class EEGutil:
         print("Test loss", test_loss)
         
         preds = model.predict(x)
-        y_pred = np.argmax(preds, axis=-1)
+        preds_classes = np.argmax(preds, axis=-1)
+        preds_class_prob = np.max(preds, axis=-1)
+        
+        print(preds_class_prob)
 
 if __name__ == '__main__':
     eegutil = EEGutil()
