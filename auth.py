@@ -322,7 +322,7 @@ class EEGutil:
             metrics=["sparse_categorical_accuracy"],
         )
         model.fit(x, y, batch_size=self.batch_size,
-                  epochs=5, callbacks=callbacks)
+                  epochs=350, callbacks=callbacks)
         model.save_weights(os.path.join("model", "model.h5"))
 
         test_loss, test_acc = model.evaluate(x, y)
