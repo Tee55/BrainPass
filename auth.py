@@ -26,11 +26,16 @@ class EEGutil:
         self.batch_size = 1
         self.label_encoder = LabelEncoder()
         self.onehot_encoder = OneHotEncoder()
+        self.delta = [1, 4]
+        self.theta = [4, 8]
+        self.alpha = [8, 13]
+        self.beta = [13, 30]
+        self.gamma = [30, 45]
 
-    def bandpower(self, x, fmin, fmax):
+    def bandpower(self, x, f_range):
         Pxx = fft(x)
-        ind_min = fmin * 3
-        ind_max = fmax * 3
+        ind_min = f_range[0] * 3
+        ind_max = f_range[1] * 3
         Pxx_abs = np.abs(Pxx)
         Pxx_pow = np.square(Pxx_abs)
         Pxx_sum = sum(Pxx_pow[ind_min: ind_max])
@@ -41,22 +46,28 @@ class EEGutil:
         m = time_shift * self.sampling_rate  # overlap size
         return [x[i:i+n] for i in range(0, len(x), n-m)]
 
-    def extract_features(self, x):
+    def get_bandpower(self, x):
         epoches = self.segmentation(x, self.duration, self.time_shift)
 
-        delta = theta = alpha = beta = gamma = total_power = []
+        delta = theta = alpha = beta = gamma = []
         for epoch in epoches:
-            delta_val = self.bandpower(epoch, 1, 4)
-            theta_val = self.bandpower(epoch, 4, 8)
-            alpha_val = self.bandpower(epoch, 8, 13)
-            beta_val = self.bandpower(epoch, 13, 30)
-            gamma_val = self.bandpower(epoch, 30, 45)
+            delta_val = self.bandpower(epoch, self.delta)
+            theta_val = self.bandpower(epoch, self.theta)
+            alpha_val = self.bandpower(epoch, self.alpha)
+            beta_val = self.bandpower(epoch, self.beta)
+            gamma_val = self.bandpower(epoch, self.gamma)
 
             delta.append(delta_val)
             theta.append(theta_val)
             alpha.append(alpha_val)
             beta.append(beta_val)
             gamma.append(gamma_val)
+        
+        delta = np.mean(np.array(delta))
+        theta = np.mean(np.array(theta))
+        alpha = np.mean(np.array(alpha))
+        beta = np.mean(np.array(beta))
+        gamma = np.mean(np.array(gamma))
 
         return delta, theta, alpha, beta, gamma
 
@@ -78,9 +89,7 @@ class EEGutil:
         
         x = []
         y = []
-        
-        channels = ["O1", "O2"]
-        
+
         for id_dir in os.listdir("private_dataset/"):
             
             # 10 file for each person
@@ -102,9 +111,8 @@ class EEGutil:
                 df = pd.read_csv(os.path.join("private_dataset/", id_dir, data_file),
                                  delimiter=",", names=header_list, skiprows=1, skipinitialspace=True)
                 df = df.drop(df.index[self.sampling_rate * self.duration:])
-                x.append([df[channel] for channel in channels])
+                x.append(df["O1"])
                 y.append(id_dir)
-        print(headers)
 
         x = np.array(x)
         y = self.label_encoder.fit_transform(y)
@@ -121,67 +129,34 @@ class EEGutil:
         
         df = pd.read_csv(os.path.join("public_dataset/", "eeg-data.csv"), sep=",")
         df.raw_values = df.raw_values.map(json.loads)
-        print(df.columns)
         
-        stimulus = ["colorRound1-1", "colorRound1-2", "colorRound1-3", "colorRound1-4", "colorRound1-5", "colorRound1-6"]
         x = []
         y = []
         for i in range(0, self.num_people):
-            data_list = []
-            for stimul in stimulus:
-                raw_list = df[df['id'] == i+1][df.label == stimul].raw_values.tolist()
-                raw_data = []
-                for raw in raw_list:
-                    raw_data.extend(raw)
-                    
-                if len(raw_data) >= self.sampling_rate*self.duration:
-                    raw_data = raw_data[0:self.sampling_rate*self.duration]
-                    data_list.append(raw_data)
-            x.append(data_list)
+            raw_list = df[df['id'] == i+1][df.label == "colorRound1-1"].raw_values.tolist()
+            raw_data = []
+            for raw in raw_list:
+                raw_data.extend(raw)
+                
+            if len(raw_data) >= self.sampling_rate*self.duration:
+                raw_data = raw_data[0:self.sampling_rate*self.duration]
+            x.append(raw_data)
             y.append(i)
+            
         x = np.array(x)
         y = self.label_encoder.fit_transform(y)
         y = np.reshape(y, (-1, 1))
         return x, y
 
     def preprocessing(self, x, combi=None):
-        new_x = []
-        for sample in x:
-            delta_avg = theta_avg = alpha_avg = beta_avg = gamma_avg = []
-            for channel in sample:
-                delta, theta, alpha, beta, gamma = self.extract_features(
-                    channel)
-                delta_avg.append(delta)
-                theta_avg.append(theta)
-                alpha_avg.append(alpha)
-                beta_avg.append(beta)
-                gamma_avg.append(gamma)
-
-            delta_avg = np.array(delta_avg)
-            theta_avg = np.array(theta_avg)
-            alpha_avg = np.array(alpha_avg)
-            beta_avg = np.array(beta_avg)
-            gamma_avg = np.array(gamma_avg)
-
-            delta_avg = np.mean(delta_avg)
-            theta_avg = np.mean(theta_avg)
-            alpha_avg = np.mean(alpha_avg)
-            beta_avg = np.mean(beta_avg)
-            gamma_avg = np.mean(gamma_avg)
-
-            features = np.array([delta_avg, theta_avg,
-                                alpha_avg, beta_avg, gamma_avg])
-
+        features = []
+        for series in x:
+            delta, theta, alpha, beta, gamma = self.get_bandpower(series)
+            feature = [delta, theta, alpha, beta, gamma]
             if combi != None:
-                features = np.array([features[index] for index in combi])
-
-            new_x.append(features)
-
-        x = np.array(new_x)
-
-        df = pd.DataFrame(x)
-        #print(df)
-
+                feature = [feature[index] for index in combi]
+            features.append(feature)
+        x = np.array(features)
         return x
 
     def fisher(self, x, y):
@@ -234,26 +209,20 @@ class EEGutil:
                     data_x, y, test_size=0.33)
 
                 knn = KNeighborsClassifier(n_neighbors=5)
-                knn.fit(X_train, y_train)
-
-                print("=====Combination {}=====".format(combi))
+                knn.fit(X_train, y_train.ravel())
 
                 predictions = knn.predict(X_test)
                 acc = accuracy_score(y_test, predictions)
-                print("KNN Accuracy: {}".format(acc))
 
                 all_acc.append(acc)
                 all_combi.append(combi)
 
         all_acc = np.array(all_acc)
-
-        print("Highest Accuracy: {}".format(np.max(all_acc)))
-        print("With Combination: {}".format(all_combi[np.argmax(all_acc)]))
-
+        print("Highest Accuracy({}) with Combination {}".format(np.max(all_acc), all_combi[np.argmax(all_acc)]))
         return all_combi[np.argmax(all_acc)]
 
-    def filter(self, x, low_fs, high_fs):
-        b, a = butter(5, [low_fs, high_fs], btype='band',
+    def filter(self, x, f_range):
+        b, a = butter(5, f_range, btype='band',
                       fs=self.sampling_rate)
         x = lfilter(b, a, x)
         return x
@@ -268,6 +237,30 @@ class EEGutil:
                     shutil.rmtree(subfolder)
                 else:
                     os.remove(subfolder)
+                    
+    def features_extractions(self, x, combi):
+        
+        new_x = []
+        for series in x:
+            delta_series = self.filter(series, self.delta)
+            theta_series = self.filter(series, self.theta)
+            alpha_series = self.filter(series, self.alpha)
+            beta_series = self.filter(series, self.beta)
+            gamma_series = self.filter(series, self.gamma)
+            
+            features = [delta_series, theta_series, alpha_series, beta_series, gamma_series]
+            features = [features[index] for index in combi]
+            
+            timeseries = []
+            for i in range(len(delta_series)):
+                each_features = []
+                for feature in features:
+                    each_features.append(feature[i])
+                timeseries.append(each_features)
+            new_x.append(timeseries)
+        
+        new_x = np.array(new_x)
+        return new_x
 
     def run(self, dataset_type="public"):
 
@@ -280,18 +273,8 @@ class EEGutil:
             
         print("Original Shape: {}, {}".format(x.shape, y.shape))
         
-        new_x = []
-        for sample in x:
-            data = np.empty((sample.shape[1], sample.shape[0]))
-            for i, channel in enumerate(sample):
-                for j, each_point in enumerate(channel):
-                    data[j][i] = each_point
-
-            data = preprocessing.normalize(data)
-
-            new_x.append(data)
-
-        x = np.array(new_x)
+        combi = self.feature_selection(x, y)
+        x = self.features_extractions(x, combi)
 
         print("Train shape: {}, {}".format(x.shape, y.shape))
 
