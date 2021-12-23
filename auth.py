@@ -18,6 +18,8 @@ from tensorflow.keras.callbacks import TensorBoard
 import shutil
 import json
 from argparse import ArgumentParser
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import ConfusionMatrixDisplay
 
 
 class EEGutil:
@@ -238,6 +240,39 @@ class EEGutil:
                 else:
                     os.remove(subfolder)
                     
+    def cal_cr_balance_cr(prediction, y_val):
+    
+        TP = 0
+        TN = 0
+        FP = 0
+        FN = 0
+
+        for index, (pred, y) in enumerate(zip(prediction, y_val)):
+
+            if index < 10:
+                if pred == y:
+                    TP += 1
+                else:
+                    FP += 1
+            else:
+                if pred == y:
+                    TN += 1
+                else:
+                    FN += 1
+
+        CR = (TP+TN)/prediction.shape[0]
+
+        TPR = TP/(TP + FN)
+        TNR = TN/(FP + TN)
+
+        balance_CR = (TPR + TNR)/2
+
+        print([TP, FP, FN, TN])
+        print(CR)
+        print(balance_CR)
+
+        return CR, balance_CR
+                    
     def features_extractions(self, x, combi):
         
         new_x = []
@@ -253,10 +288,7 @@ class EEGutil:
             
             timeseries = []
             for i in range(len(delta_series)):
-                each_features = []
-                for feature in features:
-                    each_features.append(feature[i])
-                timeseries.append(each_features)
+                timeseries.append([feature[i] for feature in features])
             new_x.append(timeseries)
         
         new_x = np.array(new_x)
@@ -270,8 +302,10 @@ class EEGutil:
             x, y = self.load_public_dataset()
         else:
             x, y = self.load_private_dataset()
-            
-        print("Original Shape: {}, {}".format(x.shape, y.shape))
+        
+        # scale & normalize
+        x = preprocessing.minmax_scale(x)
+        x = preprocessing.normalize(x)
         
         combi = self.feature_selection(x, y)
         x = self.features_extractions(x, combi)
@@ -288,14 +322,16 @@ class EEGutil:
             metrics=["sparse_categorical_accuracy"],
         )
         model.fit(x, y, batch_size=self.batch_size,
-                  epochs=350, callbacks=callbacks)
+                  epochs=5, callbacks=callbacks)
         model.save_weights(os.path.join("model", "model.h5"))
 
         test_loss, test_acc = model.evaluate(x, y)
 
         print("Test accuracy", test_acc)
         print("Test loss", test_loss)
-
+        
+        preds = model.predict(x)
+        y_pred = np.argmax(preds, axis=-1)
 
 if __name__ == '__main__':
     eegutil = EEGutil()
