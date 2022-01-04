@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 import numpy as np
-from scipy.fft import fft
+from scipy.fft import fft, fftfreq
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.feature_selection import chi2
 from sklearn.neighbors import KNeighborsClassifier
@@ -246,8 +246,16 @@ class EEGutil:
             beta_series = self.filter(series, self.beta)
             gamma_series = self.filter(series, self.gamma)
 
-            features = [delta_series, theta_series,
-                        alpha_series, beta_series, gamma_series]
+            delta_freq = fft(delta_series)
+            theta_freq = fft(theta_series)
+            alpha_freq = fft(alpha_series)
+            beta_freq = fft(beta_series)
+            gamma_freq = fft(gamma_series)
+
+            #features = [delta_series, theta_series, alpha_series, beta_series, gamma_series]
+
+            features = [delta_freq, theta_freq,
+                        alpha_freq, beta_freq, gamma_freq]
 
             if combi:
                 features = [features[index] for index in combi]
@@ -328,7 +336,7 @@ if __name__ == '__main__':
     eegutil = EEGutil()
     parser = ArgumentParser(description='EEG Authentication')
     parser.add_argument(
-        '-d', '-dataset', '--dataset', default="public",
+        '-d', '-dataset', '--dataset', default="private",
         help='Choose dataset type (Public, Private)'
     )
     args = parser.parse_args()
