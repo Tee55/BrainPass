@@ -1,7 +1,3 @@
 __pycache__
 env/
-public_dataset/
-private_dataset/
-gallery-dl/
 *.log
-sdk/
